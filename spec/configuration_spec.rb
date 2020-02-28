@@ -77,7 +77,46 @@ describe Aspen::Configuration do
         Aspen::Configuration.new(default_bad_attr_name)
       }.to raise_error(Aspen::ConfigurationError)
     end
+
+    let (:default_attribute_bad_label) {
+      "default_attribute Employer Aka The Man, company_name"
+    }
+
+    let (:default_attribute_bad_attr_name) {
+      "default_attribute Employer, name of company"
+    }
+
+    it "raises with a bad attribute name" do
+      expect {
+        Aspen::Configuration.new(default_attribute_bad_label)
+      }.to raise_error(Aspen::ConfigurationError)
+    end
+
+    it "raises with a bad attribute name" do
+      expect {
+        Aspen::Configuration.new(default_attribute_bad_attr_name)
+      }.to raise_error(Aspen::ConfigurationError)
+    end
+
+    let (:bad_starting_tokens) {
+      ["boop boop de doop", "config", "defaults", "default_attribut"]
+    }
+
+    it "raises with a bad starting token" do
+      bad_starting_tokens.each do |line|
+        expect {
+          Aspen::Configuration.new(line)
+        }.to raise_error(Aspen::ConfigurationError)
+      end
+    end
+
+    it "raises with soon to be implemented options" do
+      %w( protect allow require implicit ).each do |line|
+        expect {
+          Aspen::Configuration.new(line)
+        }.to raise_error(NotImplementedError)
+      end
+    end
+
   end
-
-
 end

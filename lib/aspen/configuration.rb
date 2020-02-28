@@ -60,6 +60,11 @@ module Aspen
         else
           _, _, info = line.partition(" ")
           label, attr_name = info.split(", ").map(&:strip)
+          contract = Aspen::Contracts::DefaultAttributeContract.new
+          result = contract.call(label: label, attr_name: attr_name)
+          if result.errors.any?
+            raise Aspen::ConfigurationError, result.errors.map {|k, v| "#{k} #{Array(v).join(", ")}"}
+          end
 
           namespace('default') do
             register('unlabeled', { label: label, attr_name: attr_name })
@@ -71,6 +76,11 @@ module Aspen
       when /^default_attribute\s/
         _, _, info = line.partition(" ")
         label, attr_name = info.split(", ").map(&:strip)
+        contract = Aspen::Contracts::DefaultAttributeContract.new
+        result = contract.call(label: label, attr_name: attr_name)
+        if result.errors.any?
+          raise Aspen::ConfigurationError, result.errors.map {|k, v| "#{k} #{Array(v).join(", ")}"}
+        end
 
         namespace('default') do
           namespace('attr_names') do
@@ -84,11 +94,11 @@ module Aspen
         namespace('relationships') do
           register('reciprocal', rel_names)
         end
-      when /^(protect|allow|require|implicit)\s/
+      when /^(protect|allow|require|implicit)\s*/
         raise NotImplementedError, <<~ERROR
           These keywords are in the plans, but they're not yet ready!
               protect, allow, require, implicit
-          ERROR
+        ERROR
       else
         first_word = line.match(/^\w+/)
         raise Aspen::ConfigurationError, <<~ERROR

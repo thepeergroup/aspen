@@ -1,7 +1,8 @@
-require "aspen/version"
-require "aspen/configuration"
-require "aspen/node"
-require "aspen/guards"
+require 'aspen/version'
+require 'aspen/configuration'
+require 'aspen/node'
+require 'aspen/guards'
+require 'aspen/contracts'
 
 module Aspen
 
@@ -34,8 +35,8 @@ module Aspen
     edge_string = ":#{edge_text.upcase}"
 
     <<~CYPHER
-      MERGE #{nodes.first.to_s}
-      , #{nodes.last.to_s}
+      MERGE #{nodes.first.to_cypher}
+      , #{nodes.last.to_cypher}
 
       , (#{nodes.first.nickname})-[#{edge_string}]->(#{nodes.last.nickname})
     CYPHER

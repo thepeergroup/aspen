@@ -9,7 +9,7 @@ module Aspen
       @nickname = nickname
     end
 
-    def to_s
+    def to_cypher
       "(#{nickname}:#{label} #{ attribute_string })"
     end
 
