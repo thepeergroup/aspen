@@ -341,6 +341,26 @@ Sometimes, we want to assign relationships right-to-left, `<-[:REL]-`, especiall
 # TODO
 ```
 
+__Mapping sentences to graphs__
+
+```
+map
+  (Person p) donated $(Amount a) to (Person c).
+  (Person p) gave (Person c) $(Amount a).
+to
+  (p)-[:GAVE_DONATION]->(Donation, amount: a)-[:TO]->(c)
+
+# Aspen
+(Matt) donated $(20) to (Hélène Vincent). # Can the parens be implicit?
+Krista gave Hélène Vincent $30.
+
+# Cypher
+(Person {name: "Matt"})-[:GAVE_DONATION]->(Donation {amount: 20})-[:TO]->(Person {name: "Hélène Vincent."})
+(Person {name: "Krista"})-[:GAVE_DONATION]->(Donation {amount: 30})-[:TO]->(Person {name: "Hélène Vincent."})
+```
+
+
+
 ## Code of Conduct
 
 There's an expectation that people working on this project will be good and kind to each other. The subject matter here is relationships, and anyone who works on this project is expected to have a baseline of healthy relating skills.

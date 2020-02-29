@@ -55,13 +55,13 @@ describe Aspen do
 
   let (:slightly_complex_cypher) {
     <<~CYPHER
-      MERGE (person-matt:Person { name: "Matt" } )
-      , (person-brianna:Person { name: "Brianna" } )
-      , (employer-umass-boston:Employer { company_name: "UMass Boston" } )
+      MERGE (matt:Person {name: "Matt"})
+      , (brianna:Person {name: "Brianna"})
+      , (umass-boston:Employer {company_name: "UMass Boston"})
 
-      , (person-matt)-[:KNOWS]->(person-brianna)
-      , (person-matt)<-[:KNOWS]-(person-brianna)
-      , (person-matt)-[:WORKS_AT]->(employer-umass-boston)
+      , (matt)-[:KNOWS]->(brianna)
+      , (matt)<-[:KNOWS]-(brianna)
+      , (matt)-[:WORKS_AT]->(umass-boston)
     CYPHER
   }
 

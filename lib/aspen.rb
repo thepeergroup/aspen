@@ -6,6 +6,9 @@ require 'aspen/contracts'
 
 module Aspen
 
+  class ConfigurationError < StandardError ; end
+  class Error < StandardError ; end
+
   # Potential problems I'm seeing already:
   # - What if they try to do > 2 nodes, > 1 edges?
   # - What if the text includes parentheses? Should we allow escaping?
@@ -17,7 +20,13 @@ module Aspen
 
     config = Configuration.new(config_text)
 
-    node_regex = /\((.*?)\)/
+    body.lines.each do |line|
+      line.split(" ").each do |word|
+        # NO OP: Start of statement parsing.
+      end
+    end
+
+    node_regex = /(\(.*?\))/
     edge_regex = /\[(.*?)\]/
 
     # I really don't like this interface.
@@ -48,7 +57,5 @@ module Aspen
     #   indicates reciprocality - so it needs to get this from the context/discourse
     # (A class above this might be a statement, which could name many relationships.)
   end
-
-  class ConfigurationError < StandardError ; end
 
 end
