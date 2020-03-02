@@ -5,6 +5,7 @@ module Aspen
   class Node
 
     extend Dry::Monads[:maybe]
+    include Dry::Monads[:maybe]
 
     # Default (D) Form: (Matt)
     DEFAULT_FORM = /\(([\w\s]+?)\)/
@@ -14,15 +15,22 @@ module Aspen
     # FULL_FORM = Wow I don't want to write this regex.
 
     attr_reader :label, :attributes, :nickname
+    attr_writer :nickname
 
-    def initialize(label: , attributes: {}, nickname: )
+    def initialize(label: , attributes: {}, nickname: nil)
       @label = label
       @attributes = attributes
-      @nickname = nickname
+      if Maybe(nickname).value_or(false)
+        @nickname = nickname
+      end
     end
 
     def to_cypher
-      "(#{nickname}:#{label} #{ attribute_string })"
+      if nickname
+        "(#{nickname}:#{label} #{ attribute_string })"
+      else
+        "(#{label} #{ attribute_string })"
+      end
     end
 
     def attribute_string

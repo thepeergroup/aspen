@@ -3,6 +3,8 @@ require 'aspen/configuration'
 require 'aspen/node'
 require 'aspen/guards'
 require 'aspen/contracts'
+require 'aspen/statement'
+require 'aspen/nickname_registry'
 
 module Aspen
 
@@ -20,32 +22,37 @@ module Aspen
 
     config = Configuration.new(config_text)
 
-    body.lines.each do |line|
-      line.split(" ").each do |word|
-        # NO OP: Start of statement parsing.
+    statements = body.lines.map do |line|
+      Statement.from_text(line)
+    end
+
+    collected_nodes = statements.flat_map do |statement|
+      statement.nodes.map do |node|
+        Node.from_text(node.word, config)
       end
     end
 
-    node_regex = /(\(.*?\))/
-    edge_regex = /\[(.*?)\]/
+    # TODO. Okay, what actually needs to happen is
+    # to swap out the nodes WITHIN STATEMENTS with nicknamed nodes.
+    nicknamer = NicknameRegistry.new()
+    nicknamer.load_nodes(collected_nodes)
+    nodes = nicknamer.nicknamed_nodes
 
-    # I really don't like this interface.
-    # Instead, read every line, read every word, tagging it. Make sure the no-match case raises an error.
-    # Make sure open-parens and close-parens match up
-    # Pass in tagged words from a single line to a Statement constructor.
-    # Check statement validity as you go along.
-    # Once all the statements are read, establish the nodes and relationships,
-    # Check for attribute uniqueness / do registry things.
-    # Then build Cypher
-    nodes_text = body.scan(node_regex).map(&:first)
-    edge_text  = body.scan(edge_regex).first.first
+    puts nodes.inspect
 
-    nodes = nodes_text.map { |node_text| Node.from_text(node_text, config) }
-    edge_string = ":#{edge_text.upcase}"
+    edge_string = ":PLACEHOLDER"
+
+    # Cypher Builder will:
+    # - take all the statements
+    # - select unique nodes (pass a block to uniq), may want to do this
+    #   making sure the nodes appear in the same order as they do in statements
+    # - If there's an Employer Matt and Person Matt, we need namespace nicknames.
+    # - Take all relationships, using the nickname namespace
+    node_head, *node_tail = nodes.map(&:to_cypher)
 
     <<~CYPHER
-      MERGE #{nodes.first.to_cypher}
-      , #{nodes.last.to_cypher}
+      MERGE #{node_head}
+      , #{node_tail.join(",\n")}
 
       , (#{nodes.first.nickname})-[#{edge_string}]->(#{nodes.last.nickname})
     CYPHER
