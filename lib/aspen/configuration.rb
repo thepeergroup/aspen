@@ -32,6 +32,10 @@ module Aspen
       raise Aspen::ConfigurationError, e.message
     end
 
+    def reciprocal?(relationship)
+      reciprocal.include? relationship
+    end
+
     alias_method :reciprocal_relationships, :reciprocal
 
     private

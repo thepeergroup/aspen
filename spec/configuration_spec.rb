@@ -52,6 +52,8 @@ describe Aspen::Configuration do
     expect(together.default_attr_name_for_label("Employer")).to eql("company_name")
     expect(together.default_attr_name_for_label("Person")).to eql("name")
     expect(together.reciprocal_relationships).to eql(["knows"])
+
+    expect(together.reciprocal?("knows")).to be true
   end
 
   context "invalid" do

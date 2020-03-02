@@ -5,17 +5,17 @@ module Aspen
 
     include Dry::Monads[:maybe]
 
-    attr_reader :nodes
+    attr_reader :statements
 
     def initialize()
       # NO OP
     end
 
-    def load_nodes(node_list)
-      unless Array(node_list).all? { |node| node.is_a? Node }
-        raise ArgumentError, "Input to #load_nodes must be an array of Node objects"
+    def load_statements(statement_list)
+      unless Array(statement_list).all? { |node| node.is_an? Aspen::Statement }
+        raise ArgumentError, "Input to #load_statements must be an array of Statement objects"
       end
-      @nodes = Array(node_list)
+      @statements = Array(statement_list)
     end
 
     def needs_label_namespace?
@@ -41,6 +41,12 @@ module Aspen
       values.inject(Hash.new(0)) do |hash, e|
         hash[e] += 1
         hash
+      end
+    end
+
+    def nicknamed_statements
+      @statements.each do |statement|
+        o, d = statement.origin, statement.destination
       end
     end
 

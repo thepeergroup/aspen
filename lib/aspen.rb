@@ -1,9 +1,12 @@
 require 'aspen/version'
+
 require 'aspen/configuration'
 require 'aspen/node'
+require 'aspen/edge'
+require 'aspen/statement'
+
 require 'aspen/guards'
 require 'aspen/contracts'
-require 'aspen/statement'
 require 'aspen/nickname_registry'
 
 module Aspen
@@ -23,24 +26,20 @@ module Aspen
     config = Configuration.new(config_text)
 
     statements = body.lines.map do |line|
-      Statement.from_text(line)
-    end
-
-    collected_nodes = statements.flat_map do |statement|
-      statement.nodes.map do |node|
-        Node.from_text(node.word, config)
-      end
+      Statement.from_text(line, context: config)
     end
 
     # TODO. Okay, what actually needs to happen is
     # to swap out the nodes WITHIN STATEMENTS with nicknamed nodes.
-    nicknamer = NicknameRegistry.new()
-    nicknamer.load_nodes(collected_nodes)
-    nodes = nicknamer.nicknamed_nodes
 
-    puts nodes.inspect
+    # The registry requests all of the statements' nodes. The statements send the nodes.
+    #   The registry takes whatever attributes it needs to make decisions.
+    #   Are we decorating? Then keeping in-order? Because all of them need the nickname.
+    # Then all of the statements.
 
-    edge_string = ":PLACEHOLDER"
+    # nicknamer = NicknameRegistry.new()
+    # nicknamer.load_statements(statements)
+    # statements_with_nicknames = nicknamer.nicknamed_statements
 
     # Cypher Builder will:
     # - take all the statements
@@ -48,13 +47,13 @@ module Aspen
     #   making sure the nodes appear in the same order as they do in statements
     # - If there's an Employer Matt and Person Matt, we need namespace nicknames.
     # - Take all relationships, using the nickname namespace
-    node_head, *node_tail = nodes.map(&:to_cypher)
+    node_head, *node_tail = statements.flat_map(&:nodes).map(&:to_cypher).uniq
 
     <<~CYPHER
       MERGE #{node_head}
-      , #{node_tail.join(",\n")}
+      , #{node_tail.join("\n, ")}
 
-      , (#{nodes.first.nickname})-[#{edge_string}]->(#{nodes.last.nickname})
+      , #{statements.map(&:to_cypher).join("\n, ")}
     CYPHER
   end
 

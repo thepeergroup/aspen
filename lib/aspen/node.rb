@@ -7,10 +7,13 @@ module Aspen
     extend Dry::Monads[:maybe]
     include Dry::Monads[:maybe]
 
-    # Default (D) Form: (Matt)
-    DEFAULT_FORM = /\(([\w\s]+?)\)/
+    # Default (D) Form: (Johnny B. Goode)
+    DEFAULT_FORM = /\(([\w\s\.]+?)\)/
+
     # Default-Attribute (DA) Form: (Employer, UMass Boston)
-    DEFAULT_ATTR_FORM = /\((\w+,\s[\w\s]+)\)/
+    DEFAULT_ATTR_FORM = /\((\w+,\s[\w\s\.]+)\)/
+
+    # Pending:
     # Full (F) Form: (Employer name: "UMass Boston", location: "William Morrissey Blvd.")
     # FULL_FORM = Wow I don't want to write this regex.
 
@@ -31,6 +34,10 @@ module Aspen
       else
         "(#{label} #{ attribute_string })"
       end
+    end
+
+    def nickname_node
+      "(#{nickname})"
     end
 
     def attribute_string

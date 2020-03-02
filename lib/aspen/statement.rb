@@ -24,7 +24,11 @@ module Aspen
       [origin, destination]
     end
 
-    def self.from_text(statement_text)
+    def to_cypher
+      [origin.nickname_node, edge.to_cypher, destination.nickname_node].join('')
+    end
+
+    def self.from_text(statement_text, context: )
       tagged_words = tokens_for(statement_text).map do |word|
         case word
         when NODE
@@ -56,9 +60,9 @@ module Aspen
       end
 
       new(
-        origin: nodes.first,
-        destination: nodes.last,
-        edge: edges.first
+        origin: Node.from_text(nodes.first.word, context),
+        destination: Node.from_text(nodes.last.word, context),
+        edge: Edge.new(edges.first.word, context)
       )
     end
 

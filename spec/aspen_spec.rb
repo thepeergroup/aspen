@@ -59,8 +59,7 @@ describe Aspen do
       , (brianna:Person {name: "Brianna"})
       , (umass-boston:Employer {company_name: "UMass Boston"})
 
-      , (matt)-[:KNOWS]->(brianna)
-      , (matt)<-[:KNOWS]-(brianna)
+      , (matt)-[:KNOWS]-(brianna)
       , (matt)-[:WORKS_AT]->(umass-boston)
     CYPHER
   }
