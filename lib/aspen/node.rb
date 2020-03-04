@@ -41,7 +41,11 @@ module Aspen
     end
 
     def attribute_string
-      attributes.to_s.gsub(/"(?<token>\w+)"=>/, '\k<token>: ')
+      attributes.to_s.
+        gsub(/"(?<token>\w+)"=>/, '\k<token>: ').
+        # Put a single space inside angle brackets
+        gsub(/\{(\s*)/, "{ ").
+        gsub(/(\s*)\}/, " }")
     end
 
     def self.from_text(node_text, context)
@@ -83,7 +87,7 @@ module Aspen
       new(
         label: label,
         attributes: { attr_name => attr_value },
-        nickname: "#{label}-#{attr_value}".parameterize
+        nickname: "#{label}-#{attr_value}".parameterize.underscore
       )
     end
   end

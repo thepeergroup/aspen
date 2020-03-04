@@ -49,13 +49,14 @@ module Aspen
     #   making sure the nodes appear in the same order as they do in statements
     # - If there's an Employer Matt and Person Matt, we need namespace nicknames.
     # - Take all relationships, using the nickname namespace
-    node_head, *node_tail = statements.flat_map(&:nodes).map(&:to_cypher).uniq
+    node_statements = statements.flat_map(&:nodes).map { |n| "MERGE #{n.to_cypher}" }.uniq.join("\n")
+    edge_statements = statements.map { |s| "MERGE #{s.to_cypher}" }.join("\n")
 
     <<~CYPHER
-      MERGE #{node_head}
-      , #{node_tail.join("\n, ")}
+      #{node_statements}
 
-      , #{statements.map(&:to_cypher).join("\n, ")}
+      #{edge_statements}
+      ;
     CYPHER
   end
 

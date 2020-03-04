@@ -11,10 +11,11 @@ describe Aspen do
 
   let (:simple_case_cypher) {
     <<~CYPHER
-      MERGE (person-matt:Person {name: "Matt"})
-      , (person-brianna:Person {name: "Brianna"})
+      MERGE (person_matt:Person { name: "Matt" })
+      MERGE (person_brianna:Person { name: "Brianna" })
 
-      , (person-matt)-[:KNOWS]->(person-brianna)
+      MERGE (person_matt)-[:KNOWS]->(person_brianna)
+      ;
     CYPHER
   }
 
@@ -31,10 +32,11 @@ describe Aspen do
 
   let (:case_two_cypher) {
     <<~CYPHER
-      MERGE (person-eliza:Person {first_name: "Eliza"})
-      , (person-brianna:Person {first_name: "Brianna"})
+      MERGE (person_eliza:Person { first_name: "Eliza" })
+      MERGE (person_brianna:Person { first_name: "Brianna" })
 
-      , (person-eliza)-[:KNOWS]->(person-brianna)
+      MERGE (person_eliza)-[:KNOWS]->(person_brianna)
+      ;
     CYPHER
   }
 
@@ -67,12 +69,13 @@ describe Aspen do
 
   let (:slightly_complex_cypher) {
     <<~CYPHER
-      MERGE (person-matt:Person {name: "Matt"})
-      , (person-brianna:Person {name: "Brianna"})
-      , (employer-umass-boston:Employer {company_name: "UMass Boston"})
+      MERGE (person_matt:Person { name: "Matt" })
+      MERGE (person_brianna:Person { name: "Brianna" })
+      MERGE (employer_umass_boston:Employer { company_name: "UMass Boston" })
 
-      , (person-matt)-[:KNOWS]-(person-brianna)
-      , (person-matt)-[:WORKS_AT]->(employer-umass-boston)
+      MERGE (person_matt)-[:KNOWS]-(person_brianna)
+      MERGE (person_matt)-[:WORKS_AT]->(employer_umass_boston)
+      ;
     CYPHER
   }
 
@@ -80,6 +83,65 @@ describe Aspen do
     expect(Aspen.compile_text(slightly_complex)).to eql(slightly_complex_cypher)
     expect(Aspen.compile_text(slightly_complex_with_line_break)).to eql(slightly_complex_cypher)
   end
+
+  let (:yoga_community_aspen) {
+    <<~CYPHER
+      default Person, name
+      default_attribute Employer, company_name
+      default_attribute Studio, company_name
+
+      reciprocal knows, is friends with
+
+      (Matt) [is friends with] (Brianna).
+      (Matt) [is friends with] (Eliza).
+      (Brianna) [is friends with] (Eliza).
+
+      (Brianna) [knows] (Sarah).
+      (Eliza) [knows] (Holland).
+      (Sarah) [teaches at] (Studio, The Corner Studio)
+      (Holland) [teaches at] (Studio, The Corner Studio)
+      (Jenna) [owns] (Studio, The Corner Studio)
+      (Jenna) [teaches at] (Studio, The Corner Studio)
+
+      (Rebecca) [knows] (Jenna)
+      (Rebecca) [is friends with] (Matt)
+      (Rebecca) [is friends with] (Brianna)
+      (Rebecca) [knows] (Eliza)
+    CYPHER
+  }
+
+  let (:yoga_community_cypher) {
+    <<~CYPHER
+      MERGE (person_matt:Person { name: "Matt" })
+      MERGE (person_brianna:Person { name: "Brianna" })
+      MERGE (person_eliza:Person { name: "Eliza" })
+      MERGE (person_sarah:Person { name: "Sarah" })
+      MERGE (person_holland:Person { name: "Holland" })
+      MERGE (studio_the_corner_studio:Studio { company_name: "The Corner Studio" })
+      MERGE (person_jenna:Person { name: "Jenna" })
+      MERGE (person_rebecca:Person { name: "Rebecca" })
+
+      MERGE (person_matt)-[:IS_FRIENDS_WITH]-(person_brianna)
+      MERGE (person_matt)-[:IS_FRIENDS_WITH]-(person_eliza)
+      MERGE (person_brianna)-[:IS_FRIENDS_WITH]-(person_eliza)
+      MERGE (person_brianna)-[:KNOWS]-(person_sarah)
+      MERGE (person_eliza)-[:KNOWS]-(person_holland)
+      MERGE (person_sarah)-[:TEACHES_AT]->(studio_the_corner_studio)
+      MERGE (person_holland)-[:TEACHES_AT]->(studio_the_corner_studio)
+      MERGE (person_jenna)-[:OWNS]->(studio_the_corner_studio)
+      MERGE (person_jenna)-[:TEACHES_AT]->(studio_the_corner_studio)
+      MERGE (person_rebecca)-[:KNOWS]-(person_jenna)
+      MERGE (person_rebecca)-[:IS_FRIENDS_WITH]-(person_matt)
+      MERGE (person_rebecca)-[:IS_FRIENDS_WITH]-(person_brianna)
+      MERGE (person_rebecca)-[:KNOWS]-(person_eliza)
+      ;
+    CYPHER
+  }
+
+  it "renders yoga community Aspen to Cypher" do
+    expect(Aspen.compile_text(yoga_community_aspen)).to eql(yoga_community_cypher)
+  end
+
 
   let (:very_complex_aspen) {
       <<~ASPEN
@@ -143,16 +205,16 @@ describe Aspen do
 
   let (:cypher_from_very_complex_aspen) {
     <<~CYPHER
-      MERGE (sureya:Person {name: "Sureya"})
-      , (jeanne:Person {name: "Jeanne Cleary"})
-      , (gail:Person {name: "Gail Packer"})
-      , (cdsc:Organization {name: "CDSC"})
+      MERGE (sureya:Person { name: "Sureya" })
+      MERGE (jeanne:Person { name: "Jeanne Cleary" })
+      MERGE (gail:Person { name: "Gail Packer" })
+      MERGE (cdsc:Organization { name: "CDSC" })
 
-      , (sureya)-[:WORKS_FOR {role: "case manager"}]->(jeanne)
-      , (sureya)-[:WORKS_FOR]->(cdsc)
-      , (gail)-[:WORKS_FOR {role: "Executive Director"}]->(cdsc)
-      , (gail)-[:IS_FRIENDS_WITH {desc: "best"}]->(jeanne)
-      , (jeanne)-[:IS_FRIENDS_WITH {desc: "best"}]->(gail)
+      MERGE (sureya)-[:WORKS_FOR { role: "case manager" }]->(jeanne)
+      MERGE (sureya)-[:WORKS_FOR]->(cdsc)
+      MERGE (gail)-[:WORKS_FOR { role: "Executive Director" }]->(cdsc)
+      MERGE (gail)-[:IS_FRIENDS_WITH { desc: "best" }]->(jeanne)
+      MERGE (jeanne)-[:IS_FRIENDS_WITH { desc: "best" }]->(gail)
     CYPHER
   }
 
