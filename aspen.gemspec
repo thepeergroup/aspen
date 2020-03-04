@@ -6,7 +6,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Matt Cloyd"]
   spec.email         = ["cloyd.matt@gmail.com"]
 
-  spec.summary       = %q{Aspen turns simple text into graph data, compiling it into Cypher (Neo4j).}
+  spec.summary       = %q{
+    Aspen turns simple text into graph data, compiling it into Cypher for Neo4j graph databases.
+  }
   spec.description   = %q{
     Aspen is a simple markup language that renders into Cypher. Write narrative data,
     mark it up, and compile to Cypher.
@@ -33,8 +35,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.2"
   spec.add_development_dependency "pry"
 
-  spec.add_dependency "dry-container", "~> 0.7"
-  spec.add_dependency "dry-monads", "~> 1.0"
+  spec.add_dependency "dry-cli",        "~> 0.5"
+  spec.add_dependency "dry-container",  "~> 0.7"
+  spec.add_dependency "dry-monads",     "~> 1.0"
   spec.add_dependency "dry-validation", "~> 1.4"
   spec.add_dependency "activesupport"
 end

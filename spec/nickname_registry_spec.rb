@@ -18,39 +18,62 @@ describe Aspen::NicknameRegistry do
       Aspen::Node.new(label: "Employer", attributes: { name: "Matt Cloyd" })
     }
 
-    let(:employer_umass_boston) {
+    let(:employer_umass) {
       Aspen::Node.new(label: "Employer", attributes: { name: "UMass Boston" })
     }
 
     context "when the attribute value is different" do
-      let(:unique_nodes) { [person_matt, person_brianna, employer_umass_boston] }
+      let(:statements) {
+        [
+          instance_double("Statement", origin: person_matt, destination: person_brianna, is_an?: true),
+          instance_double("Statement", origin: person_matt, destination: employer_umass, is_an?: true)
+        ]
+      }
 
-      it "nicknames nodes using just the attribute" do
-        subject.load_nodes(unique_nodes)
+      pending "nicknames nodes using just the attribute" do
+        subject.load_statements(statements)
         expect(subject.needs_label_namespace?).to be false
-        expect(subject.nicknamed_nodes.map(&:nickname)).to eql(['matt-cloyd', 'brianna', 'umass-boston'])
+        # expect the nodes to be simply nicknamed
       end
     end
 
     context "when the attribute values collide" do
       let(:colliding_nodes) { [person_matt, employer_matt] }
 
-      it "nicknames nodes using a label namespace" do
-        subject.load_nodes(colliding_nodes)
+      pending "nicknames nodes using a label namespace" do
+        subject.load_statements(raise)
         expect(subject.needs_label_namespace?).to be true
-        expect(subject.nicknamed_nodes.map(&:nickname)).to eql(['person-matt-cloyd', 'employer-matt-cloyd'])
+        # expect the nodes to be nicknamed with namespaces
       end
     end
 
     context "when the attribute values are exact overlaps" do
       let(:colliding_nodes) { [person_matt, person_brianna, person_matt] }
 
-      it "results in a unique set of nicknamed nodes" do
-        subject.load_nodes(colliding_nodes)
+      pending "results in a unique set of nicknamed nodes" do
+        subject.load_statements(raise)
         expect(subject.needs_label_namespace?).to be false
-        expect(subject.nicknamed_nodes.map(&:nickname)).to eql(['matt-cloyd', 'brianna'])
+        # expect the nodes to be simply nicknamed
       end
+    end
+  end
+
+  context "with multiple attributes" do
+
+    let(:person_matt) {
+      Aspen::Node.new(label: "Person", attributes: { first_name: "Matt" })
+    }
+
+    let(:person_matt_cloyd) {
+      Aspen::Node.new(label: "Person", attributes: { first_name: "Matt", last_name: "Cloyd" })
+    }
+
+    pending "raises an error with namespace collision" do
+      fail
+      # We can do this work now without having "Full Form" which converts
+      # text into multi-attribute nodes. We can just construct those nodes here.
     end
 
   end
+
 end

@@ -25,9 +25,11 @@ module Aspen
 
     config = Configuration.new(config_text)
 
+    # I don't like that we introduce and remove nils here.
     statements = body.lines.map do |line|
+      next if line.strip.empty?
       Statement.from_text(line, context: config)
-    end
+    end.compact
 
     # TODO. Okay, what actually needs to happen is
     # to swap out the nodes WITHIN STATEMENTS with nicknamed nodes.

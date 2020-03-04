@@ -83,7 +83,7 @@ module Aspen
       new(
         label: label,
         attributes: { attr_name => attr_value },
-        nickname: attr_value.parameterize
+        nickname: "#{label}-#{attr_value}".parameterize
       )
     end
   end

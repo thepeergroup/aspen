@@ -6,22 +6,97 @@ To put it another way, Aspen is a simple language that compiles to Cypher, speci
 
 Aspen transforms this:
 
-`(Matt) [knows] (Brianna)`
+```
+(Matt) [knows] (Brianna)
+```
 
 into this:
 
-`(Person {name: "Matt"})-[:KNOWS]->(Person {name: "Brianna"})`
-
-(TODO insert graph image)
+```
+(Person {name: "Matt"})-[:KNOWS]->(Person {name: "Brianna"})
+```
 
 (It's only slightly more complicated than that.)
+
+
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'aspen'
+```
+
+And then execute:
+
+    $ bundle install
+
+Or install it yourself as:
+
+    $ gem install aspen
+
+
 
 ## Usage
 
 Before reading this, make sure you know basic Cypher, to the point that you're comfortable writing statements that create and/or query multiple nodes and edges.
 
+### Command-Line Interface
 
-### Simplest Case
+#### Compilation
+
+Compile an Aspen (`.aspen`) file to a Cypher (`.cql`) file.
+
+```
+$ aspen compile path/to/file.aspen
+```
+
+This will generate a file Cypher file in the same folder, at `path/to/file.cql`.
+
+#### (Roadmap) New / Generate
+
+To create a new Aspen project, run
+
+```
+$ aspen new project_name
+```
+
+This will generate files and folders to get you started.
+
+TODO: Generate discourses and narratives.
+
+
+#### (Roadmap) Aspen Notebook
+
+Aspen will eventually ship with a "notebook", a simple web application so you can write Aspen narratives and discourses on the left and see the Cypher or graph visualization on the right. This can help with iteratively building data in Aspen.
+
+### Aspen Tutorial
+
+#### Terminology
+
+There are two important concepts in Aspen: __narratives__ and __discourses__.
+
+A __narrative__ is a description of data that records facts, observations, and perceptions about relationships. For example, in an Aspen file, we'll write `(Matt) [knows] (Brianna)` to describe the relationship between these two people.
+
+A __discourse__ is a way of speaking or writing about a subject. Because Aspen doesn't automatically know what `(Matt) [knows] (Brianna)` means, we have to tell it.
+
+In an Aspen file, the discourse is written at the top, and the narrative is written at the bottom. If you're coming from software development, you can think of the discourse as a sort of configuration that will be used by the rest of the Aspen file.
+
+Here's an example of an Aspen file, with discourse and narrative sections marked:
+
+```
+# Discourse
+default Person, name
+
+# Narrative
+(Matt) [knows] (Brianna).
+(Eliza) [knows] (Brianna).
+(Matt) [knows] (Eliza).
+```
+
+If the concepts of discourse and narrative aren't fully clear right now, that's okay—keep going. The rest of the tutorial should shed light on them. Also, this README was written pretty quickly, and if you have suggestions, please get in touch—your feedback will be well-received and appreciated!
+
+#### Syntax
 
 The simplest case for using Aspen is a simple relationship between two people.
 
@@ -48,7 +123,7 @@ To tell Aspen which parts are nodes and which are edges, we borrow the conventio
 In Aspen, we write:
 
 ```
-(Matt) [knows] (Brianna).
+(Matt) [knows] (Brianna). # Narrative
 ```
 
 This isn't complete. If we ran this, we'd get the following:
@@ -58,7 +133,7 @@ I don't know what to do with these nodes: (Matt), (Brianna).
 
 What kind of label should I apply to them, and what attribute should I assign the text to?
 
-If these are people, and the text is their name, you can replace (Matt) and (Brianna) with (Person, name: Matt) and (Person, name: Brianna).
+If these are people, and the text is their name, you can replace (Matt) and (Brianna) with (Person, name: "Matt") and (Person, name: "Brianna").
 
 There's no default set, so if you write at the top of your file "default Person, name", you can keep the nodes the same and it'll assign "Matt" as the name of a Person node, and so forth.
 ```
@@ -66,9 +141,9 @@ There's no default set, so if you write at the top of your file "default Person,
 So, let's write:
 
 ```
-default Person, name
+default Person, name # Discourse
 
-(Matt) [knows] (Brianna).
+(Matt) [knows] (Brianna). # Narrative
 ```
 
 If we ran this, we'd get this Cypher:
@@ -114,7 +189,7 @@ This isn't right yet either.
 
 Notice a few things. First, we now have spaces in our identifiers: "Matt Cloyd", "works at", "UMass Boston". Also, UMass Boston isn't a person, it's an institution, organization, employer—whatever your schema, it will be something other than the default node of "Person". So we'll have to tell Aspen about this.
 
-Aspen automatically converts relationships with spaces into the right syntax, so we can rest easy knowing `[works at]` will become `-[:WORKS_AT]->` in our Cypher. (At the moment, all relationships assign left-to-right.)
+Aspen automatically converts relationships with spaces into the right syntax, so we can rest easy knowing `[works at]` will become `-[:WORKS_AT]->` in our Cypher. (At the moment, all relationships assign left-to-right, unless they are reciprocal relationships.)
 
 Let's first set up some protections to enforce a schema. This will tell Aspen to require us to use the right node labels.
 
@@ -175,19 +250,20 @@ reciprocal knows
 
 The Cypher produced generates the reciprocal "knows" relationship, and the one-way employment relationship.
 
-
 ```
 MERGE (person-matt:Person { name: "Matt" } )
 , (person-brianna:Person { name: "Brianna" } )
 , (employer-umass-boston:Employer { name: "UMass Boston" } )
 
-, (person-matt)-[:KNOWS]->(person-brianna)
-, (person-matt)<-[:KNOWS]-(person-brianna)
+, (person-matt)-[:KNOWS]-(person-brianna)
 , (person-matt)-[:WORKS_AT]->(employer-umass-boston)
 ```
 
+__Note on reciprocal relationships__
+In Cypher, the convention for undirected (aka reciprocal or bi-directional) relationships is to write the relationship without an arrowhead, like the above `-[:KNOWS]-`. In Neo4j, all relationships are directional, and when Cypher sees an undirected relationship, it will arbitrarily choose a direction. The reason we don't create two relationships, `<-[:KNOWS]` and `-[:KNOWS]->`, is because when we query for this relationship, we'll use `-[:KNOWS]-`. If we have two `:KNOWS` relationships between nodes, we have unnecessary data duplication.
 
 
+__Roadmap, this isn't ready yet.__
 If you want to assign both a first name and a last name to a Person node.
 
 ```
@@ -252,8 +328,8 @@ If you'd like to see Aspen grow, please get in touch, whether you're a developer
 
 ```
 [ ] Compile Aspen to Cypher.
-  [ ] The simplest Aspen, with default, default_attribute, and reciprocal.
-  [ ] Attribute uniqueness
+  [x] The simplest Aspen, with default, default_attribute, and reciprocal.
+  [ ] Short nicknames & attribute uniqueness
   [ ] Custom attribute handling functions
   [ ] Schema and attribute protections
     [ ] Use dry-rb validations or schema to enforce Neo4j/Cypher requirements on tokens, like, must labels be one word capitalized?
@@ -267,37 +343,7 @@ If you'd like to see Aspen grow, please get in touch, whether you're a developer
 
 ### Features
 
-__Attribute uniqueness__
-
-Let's say you reference a person by first and last name, and later refer to that person by last name. Aspen will catch this and ask you to give enough unique attributes to confidently distinguish between the nodes. The only thing worse than messy narrative data is messy graph data.
-
-__Handling spaces in identifiers (Custom attribute handling functions)__
-
-Sometimes you'll want the default attribute on a node to be different, depending on how many attributes are given.
-
-__Schema protections__
-
-To protect against writing the wrong nodes and edges, we can add a `protect` block to allow only certain types of nodes and edges.
-
-```
-allow
-  nodes Person
-  edges knows, works at
-
-# Throws an error because Friend is not an allowed node type.
-(Friend, Matt) [knows] (Person, Brianna)
-
-# Throws an error because "loves" is not an allowed relationship type.
-(Person, Matt) [loves] (Person, Brianna)
-```
-
-To require that any  attributes
-require
-  Person: first_name
-  works at: start_date
-
-
-__Reciprocal relationships__
+#### Reciprocal relationships
 
 Some relationships are reciprocal—with few exceptions, if two people are friends, it's a two-way relationship.
 
@@ -318,9 +364,40 @@ reciprocal is friends with
 (Matt) [is friends with | f] (Brianna)
 ```
 
+### Features on the Roadmap
+
 We provide two ways to write it, one "not reciprocal" to be extra clear, or "f" for "false", which is shorter to write.
 
-__Implicit relationships__
+#### Attribute uniqueness
+
+Let's say you reference a person by first and last name, and later refer to that person by last name. Aspen will catch this and ask you to give enough unique attributes to confidently distinguish between the nodes. The only thing worse than messy narrative data is messy graph data.
+
+#### Handling spaces in identifiers (Custom attribute handling functions)
+
+Sometimes you'll want the default attribute on a node to be different, depending on how many attributes are given. For example, you might want to map "First Last" to `first_name` and `last_name` on a given node.
+
+#### Schema protections
+
+To protect against writing the wrong nodes and edges, we can add a `protect` block to allow only certain types of nodes and edges.
+
+```
+allow
+  nodes Person
+  edges knows, works at
+
+# Throws an error because Friend is not an allowed node type.
+(Friend, Matt) [knows] (Person, Brianna)
+
+# Throws an error because "loves" is not an allowed relationship type.
+(Person, Matt) [loves] (Person, Brianna)
+```
+
+To require that any  attributes
+require
+  Person: first_name
+  works at: start_date
+
+#### Implicit relationships
 
 Some relationships naturally imply other relationships. For example, if two people are friends, they must know each other. In this particular case, it might be better for the querier to know that IS_FRIENDS_WITH and KNOWS are synonymous, avoiding data duplication, but whatever, this is a tutorial.
 
@@ -333,7 +410,7 @@ implicit
 
 When this is compiled, it will assign the [:KNOWS] relationship before the [:IS_FRIENDS_WITH] relationships. All implicit relationships are run before. I don't know if this matters.
 
-__Relationships that assign right-to-left__
+#### Relationships that assign right-to-left
 
 Sometimes, we want to assign relationships right-to-left, `<-[:REL]-`, especially when running implicit relationships.
 
@@ -341,76 +418,44 @@ Sometimes, we want to assign relationships right-to-left, `<-[:REL]-`, especiall
 # TODO
 ```
 
-__Mapping sentences to graphs__
+#### Mapping sentence patterns to Cypher
+
+This example lists two sentences that, if encountered in Cypher will produce the
 
 ```
+# Discourse
 map
-  (Person p) donated $(Amount a) to (Person c).
-  (Person p) gave (Person c) $(Amount a).
+  (Person a) donated $(float amt) to (Person b).
+  (Person a) gave (Person b) $(float amt).
 to
-  (p)-[:GAVE_DONATION]->(Donation, amount: a)-[:TO]->(c)
+  (<a>)-[:GAVE_DONATION]->(Donation {amount: <amt>})<-[:RECEIVED_DONATION]-(<c>)
 
-# Aspen
-(Matt) donated $(20) to (Hélène Vincent). # Can the parens be implicit?
-Krista gave Hélène Vincent $30.
-
-# Cypher
-(Person {name: "Matt"})-[:GAVE_DONATION]->(Donation {amount: 20})-[:TO]->(Person {name: "Hélène Vincent."})
-(Person {name: "Krista"})-[:GAVE_DONATION]->(Donation {amount: 30})-[:TO]->(Person {name: "Hélène Vincent."})
+# Narrative
+Matt donated $20 to Hélène Vincent.
+Krista gave Hélène Vincent $30.50.
 ```
 
+```cql
+(Person {name: "Matt"})-[:GAVE_DONATION]->(Donation {amount: 20.0})-[:RECEIVED]->(Person {name: "Hélène Vincent."})
+(Person {name: "Krista"})-[:GAVE_DONATION]->(Donation {amount: 30.5})-[:RECEIVED]->(Person {name: "Hélène Vincent."})
+```
 
 
 ## Code of Conduct
 
 There's an expectation that people working on this project will be good and kind to each other. The subject matter here is relationships, and anyone who works on this project is expected to have a baseline of healthy relating skills.
 
+Everyone interacting in the Aspen project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/beechnut/aspen/blob/master/CODE_OF_CONDUCT.md).
+
 The full Code of Conduct is available at CODE_OF_CONDUCT.md.
 
 
-----
-
-# Aspen
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/aspen`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
-
-## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'aspen'
-```
-
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
-    $ gem install aspen
-
-## Usage
-
-TODO: Write usage instructions here
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/aspen. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/aspen/blob/master/CODE_OF_CONDUCT.md).
+Bug reports and pull requests are welcome on GitHub at https://github.com/beechnut/aspen. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/beechnut/aspen/blob/master/CODE_OF_CONDUCT.md).
 
 
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
 
-## Code of Conduct
-
-Everyone interacting in the Aspen project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/aspen/blob/master/CODE_OF_CONDUCT.md).
