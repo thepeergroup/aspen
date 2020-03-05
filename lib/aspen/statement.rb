@@ -7,7 +7,6 @@ module Aspen
     NODE = /(\(.*?\))/
     EDGE = /\[(.*?)\]/
     PERIOD = /\.{1}/
-
     NODES_AND_EDGES = /(\(.*?\))|(\[.*?\])/
 
     TaggedWord = Struct.new(:word, :tag)
@@ -25,7 +24,11 @@ module Aspen
     end
 
     def to_cypher
-      [origin.nickname_node, edge.to_cypher, destination.nickname_node].join('')
+      [
+        origin.nickname_node,
+        edge.to_cypher,
+        destination.nickname_node
+      ].join('')
     end
 
     def self.from_text(statement_text, context: )

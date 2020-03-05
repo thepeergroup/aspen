@@ -13,9 +13,8 @@ module Aspen
     # Default-Attribute (DA) Form: (Employer, UMass Boston)
     DEFAULT_ATTR_FORM = /\((\w+,\s[\w\s\.]+)\)/
 
-    # Pending:
-    # Full (F) Form: (Employer name: "UMass Boston", location: "William Morrissey Blvd.")
-    # FULL_FORM = Wow I don't want to write this regex.
+    # TODO:
+    # Full Cypher (F) Form: (Employer name: "UMass Boston", location: "William Morrissey Blvd.")
 
     attr_reader :label, :attributes, :nickname
     attr_writer :nickname
@@ -43,17 +42,12 @@ module Aspen
     def attribute_string
       attributes.to_s.
         gsub(/"(?<token>\w+)"=>/, '\k<token>: ').
-        # Put a single space inside angle brackets
+        # This puts a single space inside curly braces.
         gsub(/\{(\s*)/, "{ ").
         gsub(/(\s*)\}/, " }")
     end
 
     def self.from_text(node_text, context)
-      # So maybe, let it figure out a few things, like:
-      # - [x] If there's a given label or if it should use the default label
-      # - [x] What the attribute is. Right now we're doing D and DA form, not F form, so we only have one attribute.
-      # - [ ] What the simplest nickname is. This will require a minimal amount of attribute uniqueness.
-
       node_info = case node_text
       when DEFAULT_FORM
         { label:      None(),
@@ -74,7 +68,7 @@ module Aspen
           - (Employer, UMass Boston), with a `default_attribute` statement in the config
 
           Instead, it was
-          #{node_text}
+            #{node_text}
         ERROR
       end
 

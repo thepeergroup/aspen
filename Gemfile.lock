@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     aspen (0.1.0)
-      activesupport
+      activesupport (~> 6.0)
       dry-cli (~> 0.5)
       dry-container (~> 0.7)
       dry-monads (~> 1.0)

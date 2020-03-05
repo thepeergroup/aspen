@@ -23,7 +23,17 @@ module Aspen
     def default_attr_name_for_label(label)
       resolve("default.attr_names.#{label}")
     rescue Dry::Container::Error => e
-      raise Aspen::ConfigurationError, e.message
+      raise Aspen::ConfigurationError, <<~ERROR
+
+
+        I don't know what attribute is supposed to be assigned by default
+        to any node with the label `#{label}`.
+
+        To fix this, use `default_attribute`. For example, if the default
+        attribute should be the #{label}'s name, write this:
+
+            default_attribute #{label}, name
+      ERROR
     end
 
     def reciprocal

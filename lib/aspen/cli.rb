@@ -41,36 +41,22 @@ module Aspen
       # module Server
       #   class Start < Dry::CLI::Command
       #     desc "Start Aspen server in the background"
-
-      #     argument :root, required: true, desc: "Root directory"
-
-      #     example [
-      #       "path/to/root # Start Aspen at root directory"
-      #     ]
-
-      #     def call(root:, **)
-      #       puts "started - root: #{root}"
+      #     def call()
+      #       # NO OP
       #     end
       #   end
 
       #   class Stop < Dry::CLI::Command
       #     desc "Stop Aspen server"
-
-      #     option :graceful, type: :boolean, default: true, desc: "Graceful stop"
-
-      #     def call(**options)
-      #       puts "stopped - graceful: #{options.fetch(:graceful)}"
+      #     def call()
+      #       # NO OP
       #     end
       #   end
 
       #   class Run < Dry::CLI::Command
       #     desc "Run Aspen server in the foreground"
-
-      #     argument :task, type: :string, required: true,  desc: "Task to be executed"
-      #     argument :dirs, type: :array,  required: false, desc: "Optional directories"
-
-      #     def call(task:, dirs: [], **)
-      #       puts "exec - task: #{task}, dirs: #{dirs.inspect}"
+      #     def call()
+      #       # NO OP
       #     end
       #   end
       # end
@@ -100,22 +86,16 @@ module Aspen
 
       # module Generate
       #   class Discourse < Dry::CLI::Command
-      #     desc "Generate tests"
-
-      #     option :framework, default: "minitest", values: %w[minitest rspec]
-
-      #     def call(framework:, **)
-      #       puts "generated tests - framework: #{framework}"
+      #     desc "Generate a new discourse within a project"
+      #     def call()
+      #       # NO OP
       #     end
       #   end
 
       #   class Narrative < Dry::CLI::Command
-      #     desc "Generate tests"
-
-      #     option :framework, default: "minitest", values: %w[minitest rspec]
-
-      #     def call(framework:, **)
-      #       puts "generated tests - framework: #{framework}"
+      #     desc "Generate a new narrative within a project"
+      #     def call()
+      #       # NO OP
       #     end
       #   end
       # end
