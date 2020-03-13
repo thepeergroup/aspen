@@ -2,6 +2,10 @@ require 'aspen'
 
 describe Aspen do
 
+  it "raises an error with an empty string" do
+    expect { Aspen.compile_text(" ") }.to raise_error(Aspen::Error)
+  end
+
   let (:simple_case) {
     <<~ASPEN
       default Person, name
@@ -82,6 +86,90 @@ describe Aspen do
   it "renders slightly complex Aspen" do
     expect(Aspen.compile_text(slightly_complex)).to eql(slightly_complex_cypher)
     expect(Aspen.compile_text(slightly_complex_with_line_break)).to eql(slightly_complex_cypher)
+  end
+
+  let (:full_form) {
+    <<~ASPEN
+      default Person, name
+      reciprocal knows
+
+      (Person { name: "Matt", age: 31 }) [knows] (Brianna)
+    ASPEN
+  }
+
+  let (:full_form_cypher) {
+    <<~CYPHER
+      MERGE (person_matt:Person { name: "Matt", age: 31 })
+      MERGE (person_brianna:Person { name: "Brianna" })
+
+      MERGE (person_matt)-[:KNOWS]-(person_brianna)
+      ;
+    CYPHER
+  }
+
+  it "renders full form Aspen" do
+    expect(Aspen.compile_text(full_form)).to eql(full_form_cypher)
+  end
+
+  let (:typed_attrs) {
+    <<~ASPEN
+      default PollingPlace, voters
+
+      (PollingPlace, 100) [outmarketed] (PollingPlace, 10)
+    ASPEN
+  }
+
+  let (:typed_attrs_cypher) {
+    <<~CYPHER
+      MERGE (pollingplace_100:PollingPlace { voters: 100 })
+      MERGE (pollingplace_10:PollingPlace { voters: 10 })
+
+      MERGE (pollingplace_100)-[:OUTMARKETED]->(pollingplace_10)
+      ;
+    CYPHER
+  }
+
+  it "renders typed attributes when default" do
+    expect(Aspen.compile_text(typed_attrs)).to eql(typed_attrs_cypher)
+  end
+
+  let (:typed_da_attrs) {
+    <<~ASPEN
+      default Person, name
+      default_attribute PollingPlace, voters
+
+      (PollingPlace, 100) [outmarketed] (PollingPlace, 10)
+    ASPEN
+  }
+
+  let (:typed_da_attrs_cypher) {
+    <<~CYPHER
+      MERGE (pollingplace_100:PollingPlace { voters: 100 })
+      MERGE (pollingplace_10:PollingPlace { voters: 10 })
+
+      MERGE (pollingplace_100)-[:OUTMARKETED]->(pollingplace_10)
+      ;
+    CYPHER
+  }
+
+  it "renders typed attributes when default" do
+    expect(Aspen.compile_text(typed_da_attrs)).to eql(typed_da_attrs_cypher)
+  end
+
+
+  let (:attribute_collision) {
+    <<~ASPEN
+      default Person, name
+      reciprocal knows
+
+      (Person { name: "Matt", age: 31 }) [knows] (Matt)
+    ASPEN
+  }
+
+  pending "raises when attributes collide" do
+    expect {
+      Aspen.compile_text(attribute_collision)
+    }.to raise_error(Aspen::AttributeCollisionError)
   end
 
   let (:yoga_community_aspen) {

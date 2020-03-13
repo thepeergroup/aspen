@@ -9,3 +9,5 @@
 
 /vendor/
 /examples/
+
+.DS_Store

@@ -10,10 +10,14 @@ require 'aspen/nickname_registry'
 
 module Aspen
 
-  class ConfigurationError < StandardError ; end
   class Error < StandardError ; end
+  class ConfigurationError < Error ; end
+  class AttributeCollisionError < Error ; end
 
   def self.compile_text(text)
+    if text.strip.empty?
+      raise Aspen::Error, "Text must be provided to the `Aspen.compile_text` method."
+    end
 
     config_text, *split_body = text.partition("\n(")
     body = split_body.join().strip()

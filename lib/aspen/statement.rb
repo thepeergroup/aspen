@@ -32,6 +32,7 @@ module Aspen
     end
 
     def self.from_text(statement_text, context: )
+      # Check against custom grammar registry.
       tagged_words = tokens_for(statement_text).map do |word|
         case word
         when NODE
