@@ -113,12 +113,12 @@ describe Aspen::Configuration do
     end
 
     it "raises with soon to be implemented options" do
-      %w( protect allow require implicit ).each do |line|
+      %w( allow require implicit ).each do |line|
         expect {
           Aspen::Configuration.new(line)
         }.to raise_error(NotImplementedError)
       end
     end
-
   end
+
 end

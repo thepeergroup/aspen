@@ -91,7 +91,8 @@ module Aspen
         ERROR
       end
 
-      label     = node_info[:label].value_or(context.default_node_label)
+      label = node_info[:label].value_or(context.default_node_label)
+
       attribute_set = node_info[:attributes].inject(Hash.new({})) do |hash_obj, element|
         attr_name = element[:attr_name].value_or(
           context.default_attr_name_for_label(label)
@@ -142,14 +143,17 @@ module Aspen
     end
 
     STRING  = /^"(.+)"$/
-    INTEGER = /^(\d+)$/
+    INTEGER = /^([\d,]+)$/
     FLOAT   = /^([\d,]+\.\d+)$/
 
-    def self.tag(token)
+    def self.tag(token, add_quotes = false)
       case token
-      when STRING  then token.match(STRING).captures.first.to_s
-      when INTEGER then token.match(INTEGER).captures.first.to_i
-      when FLOAT   then token.match(FLOAT).captures.first.to_f
+      when STRING
+        string_token = token.match(STRING).captures.first.to_s
+        add_quotes ? "\"#{string_token}\"" : string_token
+
+      when INTEGER then token.match(INTEGER).captures.first.delete(',').to_i
+      when FLOAT   then token.match(FLOAT).captures.first.delete(',').to_f
       else
         raise Aspen::Error, <<~ERROR
           We couldn't tell what type of value this was supposed to be:

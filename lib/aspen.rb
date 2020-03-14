@@ -4,6 +4,7 @@ require 'aspen/configuration'
 require 'aspen/node'
 require 'aspen/edge'
 require 'aspen/statement'
+require 'aspen/matcher'
 
 require 'aspen/contracts'
 require 'aspen/nickname_registry'
@@ -12,6 +13,7 @@ module Aspen
 
   class Error < StandardError ; end
   class ConfigurationError < Error ; end
+  class MatchError < Error ; end
   class AttributeCollisionError < Error ; end
 
   def self.compile_text(text)
