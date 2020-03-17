@@ -5,15 +5,24 @@ module Aspen
 
     include Dry::Container::Mixin
 
-    attr_reader :text
+    attr_reader :text, :grammar, :tags
 
     def initialize(config_text)
       @text = config_text
-      process_lines(@text)
+      @cursor = 0
+      @grammar = Aspen::Grammar.new()
+      tag_lines
+      process_tags
+    end
+
+    def add_grammar(grammar)
+      @grammar = grammar
     end
 
     def default_node_label
       resolve("default.unlabeled")[:label]
+    rescue Dry::Container::Error
+      raise Aspen::ConfigurationError, Aspen::Errors.messages(:no_default_line)
     end
 
     def default_node_attr_name
@@ -23,17 +32,7 @@ module Aspen
     def default_attr_name_for_label(label)
       resolve("default.attr_names.#{label}")
     rescue Dry::Container::Error => e
-      raise Aspen::ConfigurationError, <<~ERROR
-
-
-        I don't know what attribute is supposed to be assigned by default
-        to any node with the label `#{label}`.
-
-        To fix this, use `default_attribute`. For example, if the default
-        attribute should be the #{label}'s name, write this:
-
-            default_attribute #{label}, name
-      ERROR
+      raise Aspen::ConfigurationError, Aspen::Errors.messages(:need_default_attribute, label)
     end
 
     def reciprocal
@@ -48,82 +47,109 @@ module Aspen
 
     alias_method :reciprocal_relationships, :reciprocal
 
-    private
+    def tag_lines
+      @tags = []
+      @text.lines.each { |line| tag_line(line) }
+      @tags
+    end
 
-    def process_line(line)
-      case line
+    def tag_line(line)
+      @tags << case line
       when /^\s*$/
-        # NO OP - skip empty lines
+        [:EMPTY_LINE]
       when /^default\s/
-        default_registered = begin
-          resolve("default.unlabeled")
-        rescue Dry::Container::Error
-          false
-        end
-        if default_registered
-          raise Aspen::ConfigurationError, <<~ERROR
-            You have already set a default label and attribute name for unlabeled nodes.
-              # TODO List them
-
-            Your configuration is trying to set a second set:
-              # TODO List them
-
-            Please edit your configuration so it only has one `default` line. You may, however,
-            use multiple `default_attribute` lines to set defaults for a specific label.
-          ERROR
-        else
-          _, _, info = line.partition(" ")
-          label, attr_name = info.split(", ").map(&:strip)
-          contract = Aspen::Contracts::DefaultAttributeContract.new
-          result = contract.call(label: label, attr_name: attr_name)
-          if result.errors.any?
-            raise Aspen::ConfigurationError, result.errors.map {|k, v| "#{k} #{Array(v).join(", ")}"}
-          end
-
-          namespace('default') do
-            register('unlabeled', { label: label, attr_name: attr_name })
-            namespace('attr_names') do
-              register(label, attr_name)
-            end
-          end
-        end
+        [:DEFAULT, split_attrs(line)]
       when /^default_attribute\s/
-        _, _, info = line.partition(" ")
-        label, attr_name = info.split(", ").map(&:strip)
-        contract = Aspen::Contracts::DefaultAttributeContract.new
-        result = contract.call(label: label, attr_name: attr_name)
-        if result.errors.any?
-          raise Aspen::ConfigurationError, result.errors.map {|k, v| "#{k} #{Array(v).join(", ")}"}
-        end
-
-        namespace('default') do
-          namespace('attr_names') do
-            register(label, attr_name)
-          end
-        end
+        [:DEFAULT_ATTRIBUTE, split_attrs(line)]
       when /^reciprocal\s/
-        _, _, rels = line.partition(" ")
-        rel_names = rels.split(",").map(&:strip)
-
-        namespace('relationships') do
-          register('reciprocal', rel_names)
+        [:RECIPROCAL, split_attrs(line)]
+      when /^match/
+        [:MATCH_START]
+      when /^to/
+        [:MATCH_TO]
+      # Two spaces, followed by non-space characters
+      when /^\s{2}\S/
+        case @tags.last.first
+        # A match statement can come after a start or another statement
+        when :MATCH_START, :MATCH_STATEMENT
+          [:MATCH_STATEMENT, line.strip]
+        # A match template can have multiple lines.
+        when :MATCH_TO, :MATCH_TEMPLATE then
+          [:MATCH_TEMPLATE, line.strip]
+        else
+          raise Aspen::ConfigurationError, Aspen::Errors.messages(:expected_match_precedent, @tags.last.first)
         end
-      when /^(protect|allow|require|implicit)\s*/
-        raise NotImplementedError, <<~ERROR
-          These keywords are in the plans, but they're not yet ready!
-              protect, allow, require, implicit
-        ERROR
       else
-        first_word = line.match(/^\w+/)
-        raise Aspen::ConfigurationError, <<~ERROR
-          Your configuration includes a line that starts with #{first_word}.
-          This is not a valid configuration option.
-        ERROR
+        raise Aspen::ConfigurationError, Aspen::Errors.messages(:no_tag, line)
       end
     end
 
-    def process_lines(text)
-      text.lines.each { |line| process_line(line) }
+    private
+
+    def split_attrs(line)
+      _, _, info = line.partition(" ")
+      info.split(",").map(&:strip)
+    end
+
+    def process_tag(tagged_line)
+      # puts "tagged line - #{tagged_line.inspect}"
+      tag, args = tagged_line
+      case tag
+      when :EMPTY_LINE
+        # NO OP - skip empty lines
+      when :DEFAULT
+        if default_registered
+          raise Aspen::ConfigurationError, Aspen::Errors.messages(:default_already_registered)
+        else
+          label, attr_name = assert_default_contract(args)
+          register("default.unlabeled", { label: label, attr_name: attr_name })
+          register("default.attr_names.#{label}", attr_name)
+        end
+      when :DEFAULT_ATTRIBUTE
+        label, attr_name = assert_default_contract(args)
+        register("default.attr_names.#{label}", attr_name)
+      when :RECIPROCAL
+        register("relationships.reciprocal", args)
+      when :MATCH_START
+        @under_construction = []
+      when :MATCH_TO
+        # NO OP
+      when :MATCH_STATEMENT
+        @under_construction << [:STATEMENT, args]
+      when :MATCH_TEMPLATE
+        @under_construction << [:TEMPLATE, args]
+        statements = @under_construction.select { |e| e.first == :STATEMENT }.map(&:last)
+        template = @under_construction.select { |e| e.first == :TEMPLATE }.map(&:last).join("\n")
+        statements.map do |statement|
+          @grammar.add Matcher.new(statement, template)
+        end
+        @under_construction = [] # Reset
+      else
+        raise Aspen::ConfigurationError, Aspen::Errors.messages(:bad_keyword)
+      end
+    end
+
+    def process_tags
+      @under_construction = []
+      @tags.each { |tag| process_tag(tag) }
+    end
+
+    def assert_default_contract(args)
+      label, attr_name = args
+      contract = Aspen::Contracts::DefaultAttributeContract.new
+      result = contract.call(label: label, attr_name: attr_name)
+      if result.errors.any?
+        raise Aspen::ConfigurationError, result.errors.map { |k, v| "#{k} #{Array(v).join(", ")}" }
+      end
+      [label, attr_name]
+    end
+
+    def default_registered
+      begin
+        resolve("default.unlabeled")
+      rescue Dry::Container::Error
+        false
+      end
     end
 
     def has_default_line?

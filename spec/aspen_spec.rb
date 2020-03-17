@@ -9,6 +9,8 @@ describe Aspen do
   let (:simple_case) {
     <<~ASPEN
       default Person, name
+
+
       (Matt) [knows] (Brianna).
     ASPEN
   }
@@ -30,6 +32,8 @@ describe Aspen do
   let (:case_two) {
     <<~ASPEN
       default Person, first_name
+
+
       (Eliza) [knows] (Brianna).
     ASPEN
   }
@@ -54,6 +58,7 @@ describe Aspen do
       default_attribute Employer, company_name
       reciprocal knows
 
+
       (Matt) [knows] (Brianna)
       (Matt) [works at] (Employer, UMass Boston)
     ASPEN
@@ -64,6 +69,7 @@ describe Aspen do
       default Person, name
       default_attribute Employer, company_name
       reciprocal knows
+
 
       (Matt) [knows] (Brianna)
 
@@ -93,6 +99,7 @@ describe Aspen do
       default Person, name
       reciprocal knows
 
+
       (Person { name: "Matt", age: 31 }) [knows] (Brianna)
     ASPEN
   }
@@ -114,6 +121,7 @@ describe Aspen do
   let (:typed_attrs) {
     <<~ASPEN
       default PollingPlace, voters
+
 
       (PollingPlace, 100) [outmarketed] (PollingPlace, 10)
     ASPEN
@@ -137,6 +145,7 @@ describe Aspen do
     <<~ASPEN
       default Person, name
       default_attribute PollingPlace, voters
+
 
       (PollingPlace, 100) [outmarketed] (PollingPlace, 10)
     ASPEN
@@ -162,6 +171,7 @@ describe Aspen do
       default Person, name
       reciprocal knows
 
+
       (Person { name: "Matt", age: 31 }) [knows] (Matt)
     ASPEN
   }
@@ -179,6 +189,7 @@ describe Aspen do
       default_attribute Studio, company_name
 
       reciprocal knows, is friends with
+
 
       (Matt) [is friends with] (Brianna).
       (Matt) [is friends with] (Eliza).
@@ -231,88 +242,65 @@ describe Aspen do
   end
 
 
+  # TODO: Catch that Jeanne and Jeanne Cleary are collisions
+  # TODO: Check that there are no unreferenced variables in the templates.
+  # TODO: Uncouple this from needing #default?, or set a warning?
+
   let (:very_complex_aspen) {
-      <<~ASPEN
-      map
-        (Person a) is (Person b)'s (Role r).
-      to
-        (a)-[:WORKS_FOR {role: r}]->(b)
-
-      map
-        (Person p) works at (Organization org)
-      to
-        (p)-[:WORKS_FOR]->(org)
-
-      map
-        (Person p) is the (Role r) at (Organization org)
-      to
-        (p)-[:WORKS_FOR {role: r}]->(q)
-
-      map
-        (Person p) and (Person q) are best friends.
-      to
-        (a)-[:IS_FRIENDS_WITH {desc: "best"}]->(b)
-        (b)-[:IS_FRIENDS_WITH {desc: "best"}]->(a)
-
-      (Sureya) is (Jeanne)'s (case manager).
-      (Sureya) works at (CDSC).
-      (Gail Packer) is the (Executive Director) at (CDSC).
-      (Gail Packer) and (Jeanne Cleary) are best friends.
-    ASPEN
-  }
-
-  let (:very_complex_aspen_without_parens) {
     <<~ASPEN
-      map
-        (Person a) is (Person b)'s (Role r).
-      to
-        (a)-[:WORKS_FOR {role: r}]->(b)
+      default Person, name
+      default_attribute Organization, name
 
-      map
-        (Person p) works at (Organization org)
+      match
+        (Person a) is (Person b)'s (string r).
       to
-        (p)-[:WORKS_FOR]->(org)
+        {{{a}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{b}}}
 
-      map
-        (Person p) is the (Role r) at (Organization org)
+      match
+        (Person p) works at (Organization org).
       to
-        (p)-[:WORKS_FOR {role: r}]->(q)
+        {{{p}}}-[:WORKS_FOR]->{{{org}}}
 
-      map
+      match
+        (Person p) is the (string r) at (Organization org).
+      to
+        {{{p}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{org}}}
+
+      match
         (Person p) and (Person q) are best friends.
       to
-        (a)-[:IS_FRIENDS_WITH {desc: "best"}]->(b)
-        (b)-[:IS_FRIENDS_WITH {desc: "best"}]->(a)
+        {{{p}}}-[:IS_FRIENDS_WITH { desc: "best" }]-{{{q}}}
 
-      Sureya is Jeanne Cleary's case manager.
+
+      Sureya is Jeanne Cleary's "case manager".
       Sureya works at CDSC.
-      Gail Packer is the Executive Director at CDSC.
-      Gail Packer and Jeanne are best friends.
+      Gail Packer is the "Executive Director" at CDSC.
+      Gail Packer and Jeanne Cleary are best friends.
     ASPEN
   }
 
   let (:cypher_from_very_complex_aspen) {
     <<~CYPHER
-      MERGE (sureya:Person { name: "Sureya" })
-      MERGE (jeanne:Person { name: "Jeanne Cleary" })
-      MERGE (gail:Person { name: "Gail Packer" })
-      MERGE (cdsc:Organization { name: "CDSC" })
+      MERGE (person_sureya:Person { name: "Sureya" })
+      MERGE (person_jeanne_cleary:Person { name: "Jeanne Cleary" })
+      MERGE (organization_cdsc:Organization { name: "CDSC" })
+      MERGE (person_gail_packer:Person { name: "Gail Packer" })
 
-      MERGE (sureya)-[:WORKS_FOR { role: "case manager" }]->(jeanne)
-      MERGE (sureya)-[:WORKS_FOR]->(cdsc)
-      MERGE (gail)-[:WORKS_FOR { role: "Executive Director" }]->(cdsc)
-      MERGE (gail)-[:IS_FRIENDS_WITH { desc: "best" }]->(jeanne)
-      MERGE (jeanne)-[:IS_FRIENDS_WITH { desc: "best" }]->(gail)
+      MERGE (person_sureya)-[:WORKS_FOR { role: "case manager" }]->(person_jeanne_cleary)
+      MERGE (person_sureya)-[:WORKS_FOR]->(organization_cdsc)
+      MERGE (person_gail_packer)-[:WORKS_FOR { role: "Executive Director" }]->(organization_cdsc)
+      MERGE (person_gail_packer)-[:IS_FRIENDS_WITH { desc: "best" }]-(person_jeanne_cleary)
+      ;
     CYPHER
   }
 
-  # pending "renders very complex Aspen" do
-  #   expect(
-  #     Aspen.compile_text(very_complex_aspen)
-  #   ).to eql(
-  #     cypher_from_very_complex_aspen
-  #   )
-  # end
+  it "renders very complex Aspen" do
+    expect(
+      Aspen.compile_text(very_complex_aspen)
+    ).to eql(
+      cypher_from_very_complex_aspen
+    )
+  end
 
   # pending "renders very complex Aspen without parentheses" do
   #   expect(

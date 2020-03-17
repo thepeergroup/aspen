@@ -52,7 +52,7 @@ module Aspen
       unless nodes.count == 2
         raise Aspen::StatementError, <<~ERROR
           A statement may only have two nodes, but we found #{nodes.count}:
-            #{nodes.map(&:word).join(", ")}
+            #{nodes.map(&:word).join(", ").inspect}
           ERROR
       end
 

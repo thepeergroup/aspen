@@ -8,11 +8,11 @@ module Aspen
     extend Dry::Monads[:maybe]
     include Dry::Monads[:maybe]
 
-    # Short (S) Form: (Johnny B. Goode)
-    SHORT_FORM = /\(([\w\s\.]+?)\)/
+    # Short (S) Form: (Johnny B. Goode), (Hélène)
+    SHORT_FORM = /\(([[[:alpha:]][[:digit:]]\s\.]+?)\)/
 
     # Default-Attribute (DA) Form: (Employer, UMass Boston)
-    DEFAULT_ATTR_FORM = /\((\w+,\s[\w\s\.]+)\)/
+    DEFAULT_ATTR_FORM = /\(([[:alpha:]]+,\s[[[:alpha:]][[:digit:]]\s\.]+)\)/
 
     # TODO:
     # Full Cypher (F) Form: (Employer name: "UMass Boston", location: "William Morrissey Blvd.")
@@ -43,7 +43,7 @@ module Aspen
 
     def attribute_string
       attributes.to_s.
-        gsub(/"(?<token>\w+)"=>/, '\k<token>: ').
+        gsub(/"(?<token>[[:alpha:]_]+)"=>/, '\k<token>: ').
         # This puts a single space inside curly braces.
         gsub(/\{(\s*)/, "{ ").
         gsub(/(\s*)\}/, " }")
@@ -110,7 +110,7 @@ module Aspen
     end
 
     INNER_CONTENT = /\((.*?)\)/
-    LABEL = /^(\w+)$/
+    LABEL = /^([[:alpha:]]+)$/
     BRACKETED_CONTENT = /^{(.*)}$/
 
     def self.assert_node_format(full_form_string)
@@ -133,11 +133,13 @@ module Aspen
           The node was not formatted correctly. The original text was:
             #{full_form_string}
 
-          The expected format looks like:
+          The expected format for "full Cypher form" looks like:
             (Person { name: 'Matt', age: 31 })
 
-          The label was '#{maybe_label.value_or("EMPTY")}'.
-          The attribute set was '#{maybe_attrs.value_or("EMPTY")}'.
+          The label was '#{maybe_label.value_or("EMPTY")}' and did not match #{LABEL.inspect}.
+          The attribute set was '#{maybe_attrs.value_or("EMPTY")}' and did not match #{BRACKETED_CONTENT.inspect}.
+
+          error code: 3
         ERROR
       end
     end
@@ -146,21 +148,40 @@ module Aspen
     INTEGER = /^([\d,]+)$/
     FLOAT   = /^([\d,]+\.\d+)$/
 
-    def self.tag(token, add_quotes = false)
+    def self.tag(token, for_template = false, context = nil)
       case token
       when STRING
         string_token = token.match(STRING).captures.first.to_s
-        add_quotes ? "\"#{string_token}\"" : string_token
-
+        for_template ? "\"#{string_token}\"" : string_token
       when INTEGER then token.match(INTEGER).captures.first.delete(',').to_i
       when FLOAT   then token.match(FLOAT).captures.first.delete(',').to_f
       else
-        raise Aspen::Error, <<~ERROR
-          We couldn't tell what type of value this was supposed to be:
-            #{token.inspect}
+        # Try to match a node.
+        if for_template && context
+          begin
+            parentheses_token = token.gsub(/(^\(?)/, "(").gsub(/(\)?$)/, ")")
+            from_text(parentheses_token, context)
+          rescue Aspen::Error # the one above
+            raise Aspen::Error, <<~ERROR
+              We couldn't tell what type of value this was supposed to be:
+                #{token.inspect}
 
-          We can detect strings, integers, and floats (a.k.a. decimals).
-        ERROR
+              We can detect strings, integers, and floats (a.k.a. decimals).
+
+              error code: 1
+            ERROR
+          end
+        else
+          raise Aspen::Error, <<~ERROR
+            We couldn't tell what type of value this was supposed to be:
+
+              #{token.inspect}
+
+            We can detect strings, integers, and floats (a.k.a. decimals).
+
+            error code: 2
+          ERROR
+        end
       end
     end
 

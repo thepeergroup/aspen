@@ -13,6 +13,8 @@ module Aspen
 
     attr_accessor :statement, :template
 
+    # TODO: Validate that we have everything we need before matching.
+    # TODO: convert the {{}} to {{{}}} in the template.
     def initialize(statement, template = nil)
       @statement = statement
 
@@ -31,20 +33,39 @@ module Aspen
       false
     end
 
-    #  |  compare against narrative line to get captures
-    #  V
-    # { a: , amt: , b: }
-    # Handle errors:
-    # Does the match pattern get ALL the expected results?
+    # Compare against narrative line to get captures
+    # Example results: { a: , amt: , b: }
     def matches!(str)
       unless match?(str)
         raise Aspen::MatchError, "Expected pattern:\n\t#{pattern}\nto match\n\t#{str}"
       end
       Hash[
-        pattern.match(str).
-        named_captures.
-        map { |k, v| [k, Aspen::Node.tag(v, true)] }
+        pattern.match(str).named_captures.map { |capture| cast_and_tag(capture) }
       ]
+    end
+
+    STRING  = /^"(.+)"$/
+    INTEGER = /^([\d,]+)$/
+    FLOAT   = /^([\d,]+\.\d+)$/
+
+    def cast_and_tag(capture)
+      key, value = *capture
+      name, _type = key.to_s.split("-")
+      type = _type.to_sym
+
+      casted_value = case type.to_sym
+      when :numeric
+        case value
+        when INTEGER then value.delete(',').to_i
+        when FLOAT   then value.delete(',').to_f
+        else
+          raise ArgumentError, "Numeric value #{value} doesn't match INTEGER or FLOAT."
+        end
+      else
+        value
+      end
+
+      [name, [casted_value, type.to_sym]]
     end
 
     MATCH_SEGMENT = /(\(.*?\))/
@@ -65,17 +86,11 @@ module Aspen
           segment
         end
       end
+      segs.last.gsub!(/\.$/, '')
+      segs.unshift "^"
+      segs.push "\\.?$"
       Regexp.new(segs.join)
     end
 
-    # Apply match_results to the template
-    #  | Set up Relationship, fill in and produce nodes from text.
-    #  V That is, initialize the matched Cypher statement from this param
-    def render_cypher(narrative)
-      unless defined? @template
-        raise ArgumentError, "Must define a template before rendering"
-      end
-      Mustache.render(template, matches!(narrative))
-    end
   end
 end

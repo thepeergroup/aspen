@@ -116,9 +116,62 @@ describe Aspen::Configuration do
       %w( allow require implicit ).each do |line|
         expect {
           Aspen::Configuration.new(line)
-        }.to raise_error(NotImplementedError)
+        }.to raise_error(Aspen::ConfigurationError)
       end
     end
   end
 
+  context "load custom grammars" do
+
+    let(:config) { Aspen::Configuration.new(match_block) }
+
+    context "with a single match line" do
+
+      let(:match_block) {
+        <<~ASPEN
+          match
+            (Person a) gave a donation to (Person B).
+          to
+            {{a}}-[:GAVE_DONATION]->{{b}}
+        ASPEN
+      }
+
+      let(:line) { "Matt gave a donation to Hélène." }
+
+      it "builds one matcher" do
+        expect(config.grammar).to be_an(Aspen::Grammar)
+        expect(config.grammar.count).to eq(1)
+        expect(config.grammar.match?(line)).to be true
+      end
+    end
+
+    context "with single-line matchers" do
+
+      let(:match_block) {
+        <<~ASPEN
+          match
+            (Person a) gave a donation to (Person B).
+            (Person a) donated to (Person B).
+          to
+            {{a}}-[:GAVE_DONATION]->{{b}}
+        ASPEN
+      }
+
+      it "builds two matchers" do
+        expect(config.grammar.count).to eq(2)
+        expect(config.grammar.match?("Matt gave a donation to Hélène.")).to be true
+        expect(config.grammar.match?("Matt donated to Hélène.")).to be true
+      end
+    end
+  end
 end
+
+
+# config = <<~CONFIG
+#       default Person, name
+#       match
+#         - (Person a) gave (Person b) $(numeric amt).
+#         - (Person a) donated $(float amt) to (Person b).
+#       to
+#         "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
+#     CONFIG

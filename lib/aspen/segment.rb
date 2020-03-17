@@ -1,10 +1,11 @@
 module Aspen
+  # TODO: Keep label information somewhere.
   Segment = Struct.new(:typedef, :variable) do
     def type
       case typedef
-      when /^[A-Z]/ then :node
+      when /^[A-Z]/    then :node
       when /^numeric$/ then :numeric
-      when /^string$/ then :string
+      when /^string$/  then :string
       else
         raise Aspen::Error <<~ERROR
           Don't recognize this type. Must be one of:
@@ -15,9 +16,9 @@ module Aspen
 
     def pattern
       case type
-      when :node    then /(?<#{variable}>.*?)/
-      when :numeric then /(?<#{variable}>[\d,]+\.?\d*)/
-      when :string  then /(?<#{variable}>\".*?\")/
+      when :node    then /(?<#{variable}-#{type}>.*?)/
+      when :numeric then /(?<#{variable}-#{type}>[\d,]+\.?\d*)/
+      when :string  then /(?<#{variable}-#{type}>\".*?\")/
       end
     end
 
