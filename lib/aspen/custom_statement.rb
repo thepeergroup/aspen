@@ -34,13 +34,41 @@ module Aspen
       )
     end
 
+    # A result set looks like this:
+    # {
+    #   "a"=>[[:SEGMENT_MATCH_NODE, "Person"], "Jeanne"],
+    #   "role"=>[[:SEGMENT_MATCH_STRING], "\"case manager\""],
+    #   "count"=>[[:SEGMENT_MATCH_NUMERIC], 1]
+    # }
     def self.make_nodes(text, context)
       results = context.grammar.results_for(text)
-      node_results = results.select do |_, value|
-        _text, type = value
-        type == :node
-      end
-      cast(node_results, context).compact.map(&:last)
+      casted_results(results, context).select { |var_name, obj| obj.is_a? Node }.values
+    end
+
+    INTEGER = /^([\d,]+)$/
+    FLOAT   = /^([\d,]+\.\d+)$/
+
+    def self.casted_results(results, context)
+      Hash[results.map do |var_name, node_result|
+        type_arr, value = node_result
+        type, _ = type_arr
+
+        new_value = case type
+        when :SEGMENT_MATCH_NODE
+          Node.from_result(node_result, context)
+        when :SEGMENT_MATCH_STRING  then value.to_s
+        when :SEGMENT_MATCH_NUMERIC
+          case value
+          when INTEGER then value.delete(',').to_i
+          when FLOAT   then value.delete(',').to_f
+          else
+            raise ArgumentError, "No numeric type match for #{value.inspect}."
+          end
+        else
+          raise ArgumentError, "No type match for #{type.inspect}"
+        end
+        [var_name, new_value]
+      end]
     end
 
     def self.make_cypher(text, context)
@@ -48,21 +76,13 @@ module Aspen
       matcher = context.grammar.matcher_for(text).value!
       results = context.grammar.results_for(text)
       template = matcher.template
-      Mustache.render(template, cast(results, context, true))
-    end
-
-    def self.cast(results, context, for_render = false)
-      Hash[results.map do |key, value|
-        content, type = value
-        new_value = if type == :node
-           # FIXME: This is a bad interface.
-          n = Node.tag(content, true, context)
-          for_render ? n.nickname_node : n
-        else
-          content
-        end
-        [key, new_value]
+      nicknamed_results = Hash[casted_results(results, context).map do |var_name, obj|
+        [
+          var_name,
+          obj.is_a?(Node) ? obj.nickname_node : obj
+        ]
       end]
+      Mustache.render(template, nicknamed_results)
     end
 
     def to_cypher

@@ -244,7 +244,7 @@ describe Aspen do
 
   # TODO: Catch that Jeanne and Jeanne Cleary are collisions
   # TODO: Check that there are no unreferenced variables in the templates.
-  # TODO: Uncouple this from needing #default?, or set a warning?
+  # TODO: Uncouple this from needing #default?, though it should need default_attribute
 
   let (:very_complex_aspen) {
     <<~ASPEN

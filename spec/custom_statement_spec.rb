@@ -10,7 +10,7 @@ describe Aspen::CustomStatement do
         "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
       ),
       Aspen::Matcher.new(
-        "(Person a) donated $(float amt) to (Person b).",
+        "(Person a) donated $(numeric amt) to (Person b).",
         "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
       )
     ]
@@ -22,19 +22,20 @@ describe Aspen::CustomStatement do
     grammar
   }
 
-  let(:context) {
-    config = Aspen::Configuration.new("default Person, name")
-    config.add_grammar(grammar)
-    config
+  let(:config) {
+    _config = Aspen::Configuration.new("default Person, name")
+    _config.add_grammar(grammar)
+    _config
   }
+
+  let(:line) { "Matt gave Hélène $2,000." }
+
+  let(:custom_statement) { Aspen::CustomStatement.from_text(line, context: config) }
+
 
   context "valid line" do
 
-    let(:custom_statement) { Aspen::CustomStatement.from_text(line, context: context) }
-
     context "with nodes in simple form" do
-
-      let(:line) { "Matt gave Hélène $2,000." }
 
       it "returns all nodes" do
         names = custom_statement.nodes.map { |n| n.attributes["name"] }

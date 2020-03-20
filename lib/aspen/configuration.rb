@@ -49,12 +49,12 @@ module Aspen
 
     def tag_lines
       @tags = []
-      @text.lines.each { |line| tag_line(line) }
+      @text.lines.each { |line| @tags << tag_line(line) }
       @tags
     end
 
     def tag_line(line)
-      @tags << case line
+      case line
       when /^\s*$/
         [:EMPTY_LINE]
       when /^default\s/
@@ -80,7 +80,7 @@ module Aspen
           raise Aspen::ConfigurationError, Aspen::Errors.messages(:expected_match_precedent, @tags.last.first)
         end
       else
-        raise Aspen::ConfigurationError, Aspen::Errors.messages(:no_tag, line)
+        raise Aspen::ConfigurationError, Aspen::Errors.messages(:no_config_tag, line)
       end
     end
 
@@ -92,7 +92,6 @@ module Aspen
     end
 
     def process_tag(tagged_line)
-      # puts "tagged line - #{tagged_line.inspect}"
       tag, args = tagged_line
       case tag
       when :EMPTY_LINE

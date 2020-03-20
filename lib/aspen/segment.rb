@@ -1,24 +1,13 @@
 module Aspen
   # TODO: Keep label information somewhere.
   Segment = Struct.new(:typedef, :variable) do
-    def type
-      case typedef
-      when /^[A-Z]/    then :node
-      when /^numeric$/ then :numeric
-      when /^string$/  then :string
-      else
-        raise Aspen::Error <<~ERROR
-          Don't recognize this type. Must be one of:
-            numeric, string, or any type of node.
-        ERROR
-      end
-    end
-
     def pattern
-      case type
-      when :node    then /(?<#{variable}-#{type}>.*?)/
-      when :numeric then /(?<#{variable}-#{type}>[\d,]+\.?\d*)/
-      when :string  then /(?<#{variable}-#{type}>\".*?\")/
+      case typedef
+      when :SEGMENT_MATCH_NUMERIC then /(?<#{variable}>[\d,]+\.?\d+)/
+      when :SEGMENT_MATCH_STRING  then /(?<#{variable}>\".*?\")/
+      when :SEGMENT_MATCH_NODE    then /(?<#{variable}>.*?)/
+      else
+        raise ArgumentError, "Not a match for a valid segment type"
       end
     end
 

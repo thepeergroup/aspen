@@ -13,7 +13,7 @@ In short, Aspen transforms this:
 into this:
 
 ```cypher
-MERGE (Person {name: "Matt"})-[:KNOWS]->(Person {name: "Brianna"})
+MERGE (:Person { name: "Matt" })-[:KNOWS]->(:Person { name: "Brianna" })
 ```
 
 (It's only slightly more complicated than that.)
@@ -154,15 +154,23 @@ This gives us the undirected relationship in Cypher that we want!
 
 ##### Multiple node types
 
-First off, we want to clarify that while you can't write nodes in Cypher-like syntax in Aspen right now like the below node, that's one of the next parts of the language we're planning to build.
+There are three ways to write nodes.
+
+- `(Matt)` - short form: requires a `default` line in the discourse
+- `(Person, Matt)` - default attribute form: requires a `default_attribute` line in the discourse
+- `(Person { name: "Matt" })` - full form or Cypher form: self-contained, requires nothing in the discourse
+
+If you need a node with multiple attributes, you can write:
 
 ```cypher
-(Person { name: 'Matt', state: 'MA' })
+(Person { name: 'Matt', state: 'MA', age: 31 })
 ```
 
-So to be super clear, there isn't a way to assign multiple attributes to a node at the moment.
+Notice how there's no preceding `:` in front of `Person` in Aspen, but there is in Cypher.
 
-But, let's review how to handle when you have another node type (aka label) in your data.
+
+
+But let's review how to handle when you have another node type (aka label) in your data, and you want to keep it short, using "default attribute form".
 
 Let's say we want to represent an Employer, and the employer's name is UMass Boston.
 
@@ -221,6 +229,210 @@ MERGE (person_matt)-[:KNOWS]-(person_brianna)
 MERGE (person_matt)-[:WORKS_AT]->(employer_umass_boston)
 ;
 ```
+
+> One known issue is that `default` and `default_attribute` auto-type the attributes they're given, and try to make them either a string or number. So, if you pass a Massachusetts zip code like `02111` into a node in either short form or default attribute form, it will become integer `2111`.
+> As a Massachusetts resident, I vowed never to let this happen in my software, so this is honestly the first thing I intend to address next.
+
+#### Custom Grammars
+
+Let's say you have a data model that tracks donations to local political candidates. Being the adept data modeler you are, you create a model that models donations as nodes, with relationships between the donor and donation, and between the recipient and donation.
+
+```cypher
+(:Person)-[:GAVE_DONATION]->(:Donation)<-[:RECEIVED_DONATION]-(:Person)
+```
+
+To write this in vanilla Aspen, you'd write:
+
+```
+(Matt) [gave donation] (Donation, 20.00).
+(Hélène) [received donation] (Donation, 20.00).
+```
+
+You may already be seeing some issues with this, like:
+
+- How does the language know whether those two donations are the same donation, or different donations of the same amount?
+- What currency is that? We can assume it's USD, but it's not self-evident.
+- It takes two lines to express a single concept, which is counter to Aspen's goal of producing data efficiently.
+
+To solve all of these issues, we can define custom grammars.
+
+__Custom grammars__ define sentences and assign them to Cypher statements. Once we define a custom grammar, we can write a simple sentence—with no parentheses or brackets!—and it will populate a Cypher statement.
+
+Let's say we want to be able to write "Matt donated $20 to Hélène.", and have it map to a Cypher statement.
+
+```
+# Discourse
+default_attribute Person, name
+
+match
+  Matt donated $20 to Hélène.
+to
+  (:Person { name: "Matt" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person { name: "Hélène" })
+
+# Narrative
+Matt donated $20 to Hélène.
+```
+
+#### Adding matchers for nodes
+
+The above grammar gives us the *exact* statement we want, but next we want to generalize it so we can write, "Sarah donated  $30 to Sumbul". We need to set variables in both the `match` and `to` sections.
+
+First, let's replace the donor and recipient. These will both be `Person`s, so we'll write:
+
+```
+default Person, name
+
+match
+  (Person a) donated $20 to (Person b).
+to
+  {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-{{{b}}}
+
+Matt donated $20 to Hélène.
+Sarah donated $30 to Sumbul.
+```
+
+We've changed two things here. (We still have to do the dollar amount. That's the next step.)
+
+First, we replaced the literal names of "Matt" and "Hélène" with __matchers__ that will take the text of a sentence and assign it to variables `a` and `b`.
+
+Second, we use the variables `a` and `b` in the template. To do this, we removed the Cypher and the parentheses, and surrounded each variable with triple curly braces `{{{}}}`, to indicate that they are
+
+> The templates—in the `to` section—use a templating language called Mustache. If you've ever used Mustache, you've probably used double braces like `{{variable}}`. We need triple braces in Aspen because Mustache escapes characters to be HTML-safe, which is a problem because Cypher needs those characters. If you accidentally use double-braces, you'll see nodes like:
+>
+> `(:Person, { name: &quot;Matt&quot; })`
+>
+> Not ideal! So, triple braces it is.
+
+When we feed this custom grammar with the sentence "Matt donated $20 to Hélène.", the data behind the scenes looks sort of like this:
+
+```ruby
+{
+  "a" => (:Person, { name: "Matt" }),
+  "b" => (:Person, { name: "Hélène" }),
+}
+```
+
+> How does it know the text should be the `name` attribute? It's because we told Aspen the default attribute for Person is `name`. But, if you wanted to specify different attributes, you could write a Person node in default attribute form or full form, like:
+>
+> `(Person, Matt) donated $20 to (:Person { name: "Matt", age: 31 }).`
+>
+> Your choice!
+
+When we take this template
+
+```cypher
+...
+to
+  {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-{{{b}}}
+```
+
+and populate it with the above data, we get the Cypher we're aiming for:
+
+```cypher
+/* Simplified slightly for demonstration purposes */
+
+(:Person, { name: "Matt" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person, { name: "Hélène" })
+```
+
+#### Adding matchers for other information
+
+Let's finish out our template, so we can adjust the donation amount.
+
+```
+...
+
+match
+  (Person a) donated $(numeric dollar_amount) to (Person b).
+to
+  {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
+
+...
+```
+
+Okay, so we've added the matcher `(numeric dollar_amount)`, and used the variable in the template.
+
+#### Types of matchers
+
+Aspen accepts three different types of matchers: numeric, string, and nodes. We've already seen nodes.
+
+__Numeric matchers__ will match typical (US) formats of numbers, including: 1, 0.000001, 100,000,000.00. Any numeric type (even if it has commas and periods) will be converted to numbers. Whole numbers will be converted to integers, and anything with a decimal point will be converted to floats.
+
+__String matchers__ will match anything in double-quotes. (Please don't use single quotes, as Aspen doesn't support them yet.)
+
+At the moment, if you have a string matcher like
+
+```
+Matt works as a (string job_position) at UMass Boston.
+```
+
+then make sure to write the job_position in quotes, like
+
+```
+Matt works as a "research assistant" at UMass Boston.
+```
+
+If you don't, it won't match.
+
+This will be addressed in a future update, because the quotes read as sarcastic. 😉
+
+#### Finishing our custom grammar
+
+Okay, let's see the whole file again, and add some more lines that this grammar can match, and some vanilla Aspen. Custom grammars play nicely with vanilla Aspen. (You can also have more than one `match..to` block to add more grammars. They'll try to match in the order in which they are defined in the file.)
+
+```
+default Person, name
+reciprocal knows
+
+match
+  (Person a) donated $(numeric dollar_amount) to (Person b).
+  (Person a) gave (Person b) $(numeric dollar_amount).
+  (Person a) gave a $(numeric dollar_amount) donation to (Person b).
+to
+  {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
+
+
+
+Matt donated $20 to Hélène.
+Sarah donated $30 to Sumbul.
+(Matt) [voted for] (Sumbul).
+(Sarah) [knows] (Hélène).
+(Matt) [knows] (Sarah).
+
+Becky gave Mayor Joe $20.
+Yael gave a $20 donation to Sam.
+(Becky) [volunteered for] (Mayor Joe).
+(Yael) [knows] (Becky).
+(Becky) [knows] (Sam).
+(Becky) [knows] (Matt).
+```
+
+This will produce a wealth of Cypher. We're leaving it here in full so you can compare the two.
+
+```
+MERGE (person_matt:Person { name: "Matt" })
+MERGE (person_helene:Person { name: "Hélène" })
+MERGE (person_sarah:Person { name: "Sarah" })
+MERGE (person_sumbul:Person { name: "Sumbul" })
+MERGE (person_becky:Person { name: "Becky" })
+MERGE (person_mayor_joe:Person { name: "Mayor Joe" })
+MERGE (person_yael:Person { name: "Yael" })
+MERGE (person_sam:Person { name: "Sam" })
+
+MERGE (person_matt)-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(person_helene)
+MERGE (person_sarah)-[:GAVE_DONATION]->(:Donation { amount: 30 })<-[:RECEIVED_DONATION]-(person_sumbul)
+MERGE (person_matt)-[:VOTED_FOR]->(person_sumbul)
+MERGE (person_sarah)-[:KNOWS]-(person_helene)
+MERGE (person_matt)-[:KNOWS]-(person_sarah)
+MERGE (person_becky)-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(person_mayor_joe)
+MERGE (person_yael)-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(person_sam)
+MERGE (person_becky)-[:VOLUNTEERED_FOR]->(person_mayor_joe)
+MERGE (person_yael)-[:KNOWS]-(person_becky)
+MERGE (person_becky)-[:KNOWS]-(person_sam)
+MERGE (person_becky)-[:KNOWS]-(person_matt)
+;
+```
+
+
 
 ## Background
 

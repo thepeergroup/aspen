@@ -12,11 +12,11 @@ describe Aspen::Matcher do
 
     it "renders a type-based pattern" do
       matcher = Aspen::Matcher.new(statement, template)
-      pattern = /^I have (?-mix:(?<apple_count-numeric>[\d,]+\.?\d*)) apples\.$/
+      pattern = /^I have (?-mix:(?<apple_count>[\d,]+\.?\d+)) apples\.?$/
 
       expect(matcher.pattern).to eq(pattern)
       expect(matcher.match?(aspen)).to be true
-      expect(matcher.matches!(aspen)).to eq({ "apple_count" => [1_000, :numeric] })
+      expect(matcher.matches!(aspen)).to eq({ "apple_count" => [[:SEGMENT_MATCH_NUMERIC], "1,000"] })
     end
 
   end
@@ -33,7 +33,7 @@ describe Aspen::Matcher do
       }
 
       it "returns matches" do
-        expect(subject.matches!(aspen)).to eq({ "apple_count" => [10, :numeric] })
+        expect(subject.matches!(aspen)).to eq({ "apple_count" => [[:SEGMENT_MATCH_NUMERIC], "10"] })
       end
     end
 
@@ -44,7 +44,7 @@ describe Aspen::Matcher do
       }
 
       it "handles commas gracefully" do
-        expect(subject.matches!(aspen)).to eq({ "apple_count" => [1_000, :numeric] })
+        expect(subject.matches!(aspen)).to eq({ "apple_count" => [[:SEGMENT_MATCH_NUMERIC], "1,000"] })
       end
     end
   end # numeric
@@ -60,7 +60,7 @@ describe Aspen::Matcher do
     }
 
     it "returns matches" do
-      expect(subject.matches!(aspen)).to eq({ "dog_name" => ["\"Fido\"", :string] })
+      expect(subject.matches!(aspen)).to eq({ "dog_name" => [[:SEGMENT_MATCH_STRING], "\"Fido\""] })
     end
   end # string
 
@@ -76,9 +76,9 @@ describe Aspen::Matcher do
 
     it "returns matches" do
       expect(subject.matches!(aspen)).to eq({
-        "a"   => ["Matt",   :node],
-        "b"   => ["Hélène", :node],
-        "amt" => [2_000,    :numeric]
+        "a"   => [[:SEGMENT_MATCH_NODE, "Person"], "Matt"],
+        "amt" => [[:SEGMENT_MATCH_NUMERIC], "2,000"],
+        "b"   => [[:SEGMENT_MATCH_NODE, "Person"], "Hélène"],
       })
     end
   end # mixed

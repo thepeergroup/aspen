@@ -17,7 +17,7 @@ describe Aspen::Grammar do
           "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
         ),
         Aspen::Matcher.new(
-          "(Person a) donated $(float amt) to (Person b).",
+          "(Person a) donated $(numeric amt) to (Person b).",
           "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
         )
       ]

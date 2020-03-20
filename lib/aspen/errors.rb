@@ -1,9 +1,14 @@
 module Aspen
-  class Error < StandardError ; end
-  class LookupError < Error ; end
-  class ConfigurationError < Error ; end
-  class MatchError < Error ; end
+
+  class Error                   < StandardError ; end
+
   class AttributeCollisionError < Error ; end
+  class BodyError               < Error ; end
+  class ConfigurationError      < Error ; end
+  class LookupError             < Error ; end
+  class MatchError              < Error ; end
+  class StatementError          < Error ; end
+  class TagError                < Error ; end
 
   class Errors
     def self.messages(lookup, *args)
@@ -67,16 +72,67 @@ module Aspen
           ERROR
         },
 
-        no_tag: -> (args) {
+        no_body_tag: -> (args) {
+          <<~ERROR
+            We couldn't find a match for the following line
+
+              #{args.first}
+
+            among the following patterns
+
+              #{args.last.registry.map(&:pattern).map(&:inspect).join("\n")}
+
+            Every line should either match a custom grammar definition, or
+            start with a node, like:
+
+              (Matt) [knows] (Brianna).
+
+          ERROR
+        },
+
+        no_config_tag: -> (args) {
           <<~ERROR
             There's no configuration option that matches the line:
 
-              #{args.first.inspect}
+              #{args.first}
 
             Maybe it's a spelling error?
 
           ERROR
-        }
+        },
+
+        no_statement_tag: -> (args) {
+          <<~ERROR
+            Couldn't figure out how to tag '#{args.first}'."
+          ERROR
+        },
+
+        statement_node_count: -> (args) {
+          <<~ERROR
+            A statement must have exactly two nodes, but we found #{args.first.count} in this statement:
+
+              #{args.last}
+
+            The nodes are:
+
+              #{args.first.map(&:last).join(", ").inspect}
+
+          ERROR
+        },
+
+        statement_edge_count: -> (args) {
+          <<~ERROR
+            A statement must have exactly one edge, but we found #{args.first.count} in this statement:
+
+              #{args.last}
+
+            The edges are:
+
+              #{args.first.map(&:last).join(", ").inspect}
+
+          ERROR
+        },
+
       }
     end
   end

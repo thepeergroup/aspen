@@ -55,11 +55,26 @@ module Aspen
       nickname   == other.nickname
     end
 
-    def self.from_text(node_text, context)
+    def self.from_result(result, context)
+      type_array, attrs = result
+      _, label = type_array
+
+      from_text(attrs, context, label)
+    end
+
+    def self.from_text(given_node_text, context, given_label = nil)
+
+      node_text = if given_label
+        given_node_text.gsub(/(^\(?)/, "(").gsub(/(\)?$)/, ")")
+      else
+        given_node_text
+      end
+
       node_info = case node_text
       when SHORT_FORM
+        label = Maybe(given_label)
         attr_value = node_text.match(SHORT_FORM).captures.first
-        { label:      None(),
+        { label:      label,
           attributes: [
             {
               attr_name:  None(),
