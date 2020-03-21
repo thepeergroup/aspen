@@ -19,9 +19,22 @@ MERGE (:Person { name: "Matt" })-[:KNOWS]->(:Person { name: "Brianna" })
 (It's only slightly more complicated than that.)
 
 
+## Graphs4Good
+
+Have you registered with [Graphs4Good](http://graphs4good.me/) yet?
+
+> This new program aims to showcase – and then support, encourage and connect others to – graph-powered projects that effect positive social change, uphold democratic principles and take on some of the world's toughest challenges. [~ graphs4good.me](http://graphs4good.me/)
+
+Aspen's purpose is to enable graph data creation for people who need the insights of graph databases but aren't developers and/or don't have the time to learn it.
+
+The technology itself may be neutral, but it was inspired by a conflict resolution / peacebuilding exercise, and the team behind it wants to see it deployed in situations where developers and non-developers alike could use it to further peacebuilding efforts and other positive social change.
+
+Admittedly, Aspen can't bring graphs to non-developers on its own, but it's trying to contribute to solutions.
+
+
 ## Installation
 
-Right now, installation is a little rough. We plan to resolve this soon.
+[Help improve the installation process and instructions.](https://github.com/beechnut/aspen/issues/2)
 
 Make sure you have Ruby 2.6+. Clone this repository, `cd` into it, and run `bundle install`.
 
@@ -36,7 +49,7 @@ Before reading this, make sure you know basic Cypher, to the point that you're c
 Once you write an Aspen file, compile it to Cypher (`.cql`) by running:
 
 ```sh
-$ bundle exec aspen compile /path/to/an-aspen-file.aspen
+$ bundle exec bin/aspen compile /path/to/an-aspen-file.aspen
 ```
 
 This will generate a file Cypher file in the same folder, at `path/to/file.cql`.
@@ -46,6 +59,8 @@ This will generate a file Cypher file in the same folder, at `path/to/file.cql`.
 Aspen will eventually ship with a "notebook", a simple web application so you can write Aspen narratives and discourses on the left and see the Cypher or graph visualization on the right. This can help with iteratively building data in Aspen.
 
 ### Aspen Tutorial
+
+[Help improve this tutorial.](https://github.com/beechnut/aspen/issues/1)
 
 #### Terminology
 
@@ -231,7 +246,10 @@ MERGE (person_matt)-[:WORKS_AT]->(employer_umass_boston)
 ```
 
 > One known issue is that `default` and `default_attribute` auto-type the attributes they're given, and try to make them either a string or number. So, if you pass a Massachusetts zip code like `02111` into a node in either short form or default attribute form, it will become integer `2111`.
-> As a Massachusetts resident, I vowed never to let this happen in my software, so this is honestly the first thing I intend to address next.
+>
+> As a Massachusetts resident, I vowed never to let this happen in my software, so I intend to address this soon.
+
+[Help fix this issue.](https://github.com/beechnut/aspen/issues/9)
 
 #### Custom Grammars
 
@@ -357,7 +375,7 @@ Aspen accepts three different types of matchers: numeric, string, and nodes. We'
 
 __Numeric matchers__ will match typical (US) formats of numbers, including: 1, 0.000001, 100,000,000.00. Any numeric type (even if it has commas and periods) will be converted to numbers. Whole numbers will be converted to integers, and anything with a decimal point will be converted to floats.
 
-__String matchers__ will match anything in double-quotes. (Please don't use single quotes, as Aspen doesn't support them yet.)
+__String matchers__ will match anything in double-quotes. (Please don't use single quotes, as Aspen doesn't support them yet. [Help fix this issue.](https://github.com/beechnut/aspen/issues/6))
 
 At the moment, if you have a string matcher like
 
@@ -373,7 +391,7 @@ Matt works as a "research assistant" at UMass Boston.
 
 If you don't, it won't match.
 
-This will be addressed in a future update, because the quotes read as sarcastic. 😉
+This will be addressed in a future update, because the quotes read as sarcastic. 😉 [(Help fix this issue.)](https://github.com/beechnut/aspen/issues/5)
 
 #### Finishing our custom grammar
 
@@ -450,7 +468,6 @@ We believe that graph databases and graph algorithms can provide deep insights i
 
 ## Roadmap
 
-- Custom grammars - matching sentences to Cypher statements
 - Schema and attribute protections - so a typo doesn't mess up your data model)
 - Short nicknames & attribute uniqueness - so you can avoid accidental data duplication when "Matt" and "Matt Cloyd" are the same person
 - Custom attribute handling functions - if your default nodes could either be a first name or a full name, switch between attributes
