@@ -50,7 +50,10 @@ module Aspen
 
     def to_cypher
       node_statements = @statements.flat_map(&:nodes).map { |n| "MERGE #{n.to_cypher}" }.uniq.join("\n")
-      edge_statements = @statements.map { |s| "MERGE #{s.to_cypher}" }.join("\n")
+      edge_statements = @statements.
+        flat_map { |s| s.to_cypher.split("\n") }.
+        map      { |c| "MERGE #{c}" }.
+        join("\n")
 
       return [node_statements, "\n\n", edge_statements, "\n;\n"].join("")
     end

@@ -3,6 +3,8 @@ require 'dry/cli'
 require 'dry/cli/utils/files'
 
 require 'listen'
+require 'neo4j/core'
+require 'neo4j/core/cypher_session/adaptors/http'
 
 require 'aspen'
 require 'aspen/watcher'
@@ -25,19 +27,37 @@ module Aspen
 
         argument :path, required: true, desc: "Aspen file to compile to Cypher"
 
+        option :database, type: :string, desc: "Database URL", aliases: ["d"]
+        # option :mode, default: "http", values: %w[http https bolt], desc: "The connection protocol"
+
         example [
-          "path/to/file.aspen # Compiles to path/to/file.cypher"
+          "path/to/file.aspen                                      # Compiles to path/to/file.cypher",
+          "path/to/file.aspen -d http://neo4j:pass@localhost:11002 # Compiles and runs in database"
         ]
 
-        def call(path: )
+        def call(path: , **options)
           basename = File.basename(path, ".aspen")
           dir = File.dirname(path)
           dest = File.expand_path("#{basename}.cql", dir)
-          File.open(dest, 'w') do |file|
-            file << Aspen.compile_text(File.read(path))
-          end
+          cypher = Aspen.compile_text(File.read(path))
+          File.open(dest, 'w') { |file| file << cypher }
 
           puts "Compiled #{basename}.aspen to #{basename}.cql."
+
+          if options.fetch(:database) { false }
+            url = options.fetch(:database)
+            puts "About to push to Neo4j at #{url}"
+            adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(url, {})
+            session = Neo4j::Core::CypherSession.new(adaptor)
+            if options.fetch(:drop)
+              print "About to drop data from database..."
+              session.query("MATCH (n) DETACH DELETE n")
+              print "OK\n"
+            end
+            print "About to push data to database..."
+            res = session.query(cypher) # 'MATCH (n) RETURN n LIMIT 10'
+            print "OK\n"
+          end
         end
       end
 
@@ -45,10 +65,17 @@ module Aspen
         class Run < Dry::CLI::Command
           desc "Watch a single file and automatically compile it"
 
-          argument :path, required: true
+          argument :path, required: true, desc: "Folder or file to watch for changes"
+          option :database, type: :string, desc: "Database URL", aliases: ["d"]
+          option :drop, type: :boolean, desc: "DANGER: Drops db before every push"
 
-          def call(path: )
-            Aspen::Watcher.new(path: path).start
+          example [
+            "folder/with/aspen/                                      # Recompiles files upon changes",
+            "folder/with/aspen/ -d http://neo4j:pass@localhost:11002 # Pushes recompiled Cypher to database"
+          ]
+
+          def call(path: , **options)
+            Aspen::Watcher.new(path: path, options: options).start
           end
         end
       end

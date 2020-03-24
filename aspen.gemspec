@@ -43,4 +43,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "dry-types",      "~> 1.0"
   spec.add_dependency "listen",         "~> 3.0"
   spec.add_dependency "mustache",       "~> 1.0"
+  spec.add_dependency "neo4j-core"
 end

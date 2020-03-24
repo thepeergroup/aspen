@@ -6,7 +6,6 @@ require 'aspen/body'
 require 'aspen/node'
 require 'aspen/edge'
 
-# require 'aspen/types'
 require 'aspen/statement'
 require 'aspen/custom_statement'
 require 'aspen/matcher'
@@ -23,8 +22,7 @@ module Aspen
       raise Aspen::Error, "Text must be provided to the `Aspen.compile_text` method."
     end
 
-    head, *tail = text.partition("\n\n\n")
-    body_text = tail.join().strip()
+    head, _sep, body_text = text.partition("----")
 
     context = Configuration.new(head)
     body    = Body.new(body_text, context: context)

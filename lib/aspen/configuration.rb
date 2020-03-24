@@ -67,6 +67,8 @@ module Aspen
         [:MATCH_START]
       when /^to/
         [:MATCH_TO]
+      when /^end/
+        [:BLOCK_END]
       # Two spaces, followed by non-space characters
       when /^\s{2}\S/
         case @tags.last.first
@@ -117,6 +119,7 @@ module Aspen
         @under_construction << [:STATEMENT, args]
       when :MATCH_TEMPLATE
         @under_construction << [:TEMPLATE, args]
+      when :BLOCK_END
         statements = @under_construction.select { |e| e.first == :STATEMENT }.map(&:last)
         template = @under_construction.select { |e| e.first == :TEMPLATE }.map(&:last).join("\n")
         statements.map do |statement|
@@ -124,7 +127,7 @@ module Aspen
         end
         @under_construction = [] # Reset
       else
-        raise Aspen::ConfigurationError, Aspen::Errors.messages(:bad_keyword)
+        raise Aspen::ConfigurationError, Aspen::Errors.messages(:bad_keyword, tag)
       end
     end
 

@@ -9,8 +9,7 @@ describe Aspen do
   let (:simple_case) {
     <<~ASPEN
       default Person, name
-
-
+      ----
       (Matt) [knows] (Brianna).
     ASPEN
   }
@@ -32,8 +31,7 @@ describe Aspen do
   let (:case_two) {
     <<~ASPEN
       default Person, first_name
-
-
+      ----
       (Eliza) [knows] (Brianna).
     ASPEN
   }
@@ -57,8 +55,7 @@ describe Aspen do
       default Person, name
       default_attribute Employer, company_name
       reciprocal knows
-
-
+      ----
       (Matt) [knows] (Brianna)
       (Matt) [works at] (Employer, UMass Boston)
     ASPEN
@@ -69,7 +66,7 @@ describe Aspen do
       default Person, name
       default_attribute Employer, company_name
       reciprocal knows
-
+      ----
 
       (Matt) [knows] (Brianna)
 
@@ -98,7 +95,7 @@ describe Aspen do
     <<~ASPEN
       default Person, name
       reciprocal knows
-
+      ----
 
       (Person { name: "Matt", age: 31 }) [knows] (Brianna)
     ASPEN
@@ -121,7 +118,7 @@ describe Aspen do
   let (:typed_attrs) {
     <<~ASPEN
       default PollingPlace, voters
-
+      ----
 
       (PollingPlace, 100) [outmarketed] (PollingPlace, 10)
     ASPEN
@@ -145,7 +142,7 @@ describe Aspen do
     <<~ASPEN
       default Person, name
       default_attribute PollingPlace, voters
-
+      ----
 
       (PollingPlace, 100) [outmarketed] (PollingPlace, 10)
     ASPEN
@@ -170,7 +167,7 @@ describe Aspen do
     <<~ASPEN
       default Person, name
       reciprocal knows
-
+      ----
 
       (Person { name: "Matt", age: 31 }) [knows] (Matt)
     ASPEN
@@ -190,6 +187,7 @@ describe Aspen do
 
       reciprocal knows, is friends with
 
+      ----
 
       (Matt) [is friends with] (Brianna).
       (Matt) [is friends with] (Eliza).
@@ -255,22 +253,26 @@ describe Aspen do
         (Person a) is (Person b)'s (string r).
       to
         {{{a}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{b}}}
+      end
 
       match
         (Person p) works at (Organization org).
       to
         {{{p}}}-[:WORKS_FOR]->{{{org}}}
+      end
 
       match
         (Person p) is the (string r) at (Organization org).
       to
         {{{p}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{org}}}
+      end
 
       match
         (Person p) and (Person q) are best friends.
       to
         {{{p}}}-[:IS_FRIENDS_WITH { desc: "best" }]-{{{q}}}
-
+      end
+      ----
 
       Sureya is Jeanne Cleary's "case manager".
       Sureya works at CDSC.
@@ -301,13 +303,5 @@ describe Aspen do
       cypher_from_very_complex_aspen
     )
   end
-
-  # pending "renders very complex Aspen without parentheses" do
-  #   expect(
-  #     Aspen.compile_text(very_complex_aspen_without_parens)
-  #   ).to eql(
-  #     cypher_from_very_complex_aspen
-  #   )
-  # end
 
 end

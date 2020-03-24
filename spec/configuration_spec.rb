@@ -133,6 +133,7 @@ describe Aspen::Configuration do
             (Person a) gave a donation to (Person B).
           to
             {{a}}-[:GAVE_DONATION]->{{b}}
+          end
         ASPEN
       }
 
@@ -154,6 +155,7 @@ describe Aspen::Configuration do
             (Person a) donated to (Person B).
           to
             {{a}}-[:GAVE_DONATION]->{{b}}
+          end
         ASPEN
       }
 
@@ -161,6 +163,28 @@ describe Aspen::Configuration do
         expect(config.grammar.count).to eq(2)
         expect(config.grammar.match?("Matt gave a donation to Hélène.")).to be true
         expect(config.grammar.match?("Matt donated to Hélène.")).to be true
+      end
+    end
+
+    context "with a multiline template" do
+      let(:match_block) {
+        <<~ASPEN
+          match
+            (Person p) (string freq) attends (Class class) with (Person teacher) at (Studio studio)
+          to
+            {{{p}}}-[:ATTENDS { frequency: {{{freq}}} }]->{{{class}}}<-[:TEACHES]-{{{teacher}}}
+            {{{class}}}-[:HOSTED_AT]->{{{studio}}}
+          end
+        ASPEN
+      }
+
+      let (:sentence) {
+        "Matt \"regularly\" attends Meditation with Holland at Corner Studio."
+      }
+
+      it "builds one matchers" do
+        expect(config.grammar.count).to eq(1)
+        expect(config.grammar.match?(sentence)).to be true
       end
     end
   end
