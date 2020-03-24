@@ -62,11 +62,21 @@ You may want to "watch" a file or folder of Aspen files for changes, and have th
 $ bundle exec bin/aspen watch /path/containing/aspen/files
 ```
 
+If you want the data to be published to a Neo4j database, run the command with the `--database`  or `-d` option, with the URL to a Neo4j instance. (This currently only supports HTTP.)
+
+```sh
+$ bundle exec bin/aspen watch /path/containing/aspen/files -d http://user:pass@localhost:port
+```
+
+If the database you're connecting to is a playground instance, retaining your data doesn't matter, and you just want to use Aspen to iterate on your data & data model, use the `--drop` option.
+
+__Danger!__ This will delete all of your data, every time you save a file.
+
+```sh
+$ bundle exec bin/aspen watch /path/containing/aspen/files -d http://user:pass@localhost:port --drop
+```
+
 Press Ctrl+C to quit the watcher.
-
-#### (On the roadmap) Aspen Notebook
-
-Aspen will eventually ship with a "notebook", a simple web application so you can write Aspen narratives and discourses on the left and see the Cypher or graph visualization on the right. This can help with iteratively building data in Aspen.
 
 ### Aspen Tutorial
 
@@ -478,10 +488,10 @@ We believe that graph databases and graph algorithms can provide deep insights i
 
 ## Roadmap
 
-- Schema and attribute protections - so a typo doesn't mess up your data model)
+- Aspen Notebook - live connection between Aspen and a playground Neo4j instance, so you can type Aspen on the left and see the visual graph on the right
+- Schema and attribute protections - so a typo doesn't mess up your data model
 - Short nicknames & attribute uniqueness - so you can avoid accidental data duplication when "Matt" and "Matt Cloyd" are the same person
 - Custom attribute handling functions - if your default nodes could either be a first name or a full name, switch between attributes
-- Aspen Notebook - live connection between Aspen and a playground Neo4j instance
 - Aspen Notebook publishing - publish data to a development/test/production Neo4j instance (and perhaps view diffs)
 - Two-way conversion between Neo4j data and Aspen
 
