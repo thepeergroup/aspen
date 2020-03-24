@@ -90,14 +90,16 @@ A __narrative__ is a description of data that records facts, observations, and p
 
 A __discourse__ is a way of speaking or writing about a subject. Because Aspen doesn't automatically know what `(Matt) [knows] (Brianna)` means, we have to tell it. It knows that Matt and Brianna will be nodes, but doesn't know what their labels or attributes will be.
 
-In an Aspen file, the discourse is written at the top, and the narrative is written at the bottom. If you're coming from a software development background, you can think of the discourse as a sort of configuration that will be used to build the Cypher file that results from the Aspen narrative.
+In an Aspen file, the discourse is written at the top, and the narrative is written at the bottom, __always__ split by a line of just four dashes: `----`.
+
+If you're coming from a software development background, you can think of the discourse as a sort of configuration that will be used to build the Cypher file that results from the Aspen narrative.
 
 Here's an example of an Aspen file, with discourse and narrative sections marked:
 
 ```aspen
 # Discourse
 default Person, name
-
+----
 # Narrative
 (Matt) [knows] (Brianna).
 (Eliza) [knows] (Brianna).
@@ -141,7 +143,7 @@ So, let's add a `default` line to the discourse section of the file, up at the t
 ```
  # Discourse
 default Person, name
-
+----
 # Narrative
 (Matt) [knows] (Brianna).
 ```
@@ -179,7 +181,7 @@ To get this reciprocality, we list all the reciprocal relationships after the ke
 # Discourse
 default Person, name
 reciprocal knows
-
+----
 # Narrative
 (Matt) [knows] (Brianna).
 ```
@@ -211,7 +213,7 @@ Let's say we want to represent an Employer, and the employer's name is UMass Bos
 
 ```aspen
 default Person, name
-
+----
 ...
 (Matt) [works at] (Employer, UMass Boston)
 ```
@@ -224,7 +226,7 @@ In order to tell Aspen to assign the text "UMass Boston" to an attribute called 
 # Discourse
 default Person, name
 default_attribute Employer, name
-
+----
 # Narrative
 (Matt) [works at] (Employer, UMass Boston)
 ```
@@ -247,7 +249,7 @@ The whole code all together is:
 default Person, name
 default_attribute Employer, company_name
 reciprocal knows
-
+----
 # Narrative
 (Matt) [knows] (Brianna).
 (Matt) [works at] (Employer, UMass Boston).
@@ -306,7 +308,8 @@ match
   Matt donated $20 to Hélène.
 to
   (:Person { name: "Matt" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person { name: "Hélène" })
-
+end
+----
 # Narrative
 Matt donated $20 to Hélène.
 ```
@@ -324,7 +327,8 @@ match
   (Person a) donated $20 to (Person b).
 to
   {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-{{{b}}}
-
+end
+----
 Matt donated $20 to Hélène.
 Sarah donated $30 to Sumbul.
 ```
@@ -383,7 +387,7 @@ match
   (Person a) donated $(numeric dollar_amount) to (Person b).
 to
   {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
-
+end
 ...
 ```
 
@@ -415,7 +419,7 @@ This will be addressed in a future update, because the quotes read as sarcastic.
 
 #### Finishing our custom grammar
 
-Okay, let's see the whole file again, and add some more lines that this grammar can match, and some vanilla Aspen. Custom grammars play nicely with vanilla Aspen. (You can also have more than one `match..to` block to add more grammars. They'll try to match in the order in which they are defined in the file.)
+Okay, let's see the whole file again, and add some more lines that this grammar can match, and some vanilla Aspen. Custom grammars play nicely with vanilla Aspen. (You can also have more than one `match..to..end` block to add more grammars. They'll try to match in the order in which they are defined in the file.)
 
 ```
 default Person, name
@@ -427,8 +431,8 @@ match
   (Person a) gave a $(numeric dollar_amount) donation to (Person b).
 to
   {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
-
-
+end
+----
 
 Matt donated $20 to Hélène.
 Sarah donated $30 to Sumbul.
