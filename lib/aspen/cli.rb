@@ -1,8 +1,11 @@
-require "bundler/setup"
-require "dry/cli"
-require "dry/cli/utils/files"
+require 'bundler/setup'
+require 'dry/cli'
+require 'dry/cli/utils/files'
 
-require "aspen"
+require 'listen'
+
+require 'aspen'
+require 'aspen/watcher'
 
 module Aspen
   module CLI
@@ -35,6 +38,18 @@ module Aspen
           end
 
           puts "Compiled #{basename}.aspen to #{basename}.cql."
+        end
+      end
+
+      module Watch
+        class Run < Dry::CLI::Command
+          desc "Watch a single file and automatically compile it"
+
+          argument :path, required: true
+
+          def call(path: )
+            Aspen::Watcher.new(path: path).start
+          end
         end
       end
 
@@ -102,6 +117,8 @@ module Aspen
 
       register "version", Version, aliases: ["v", "-v", "--version"]
       register "compile", Compile, aliases: ["c"]
+
+      register "watch", Watch::Run, aliases: ["w"]
 
       # register "new", New
 

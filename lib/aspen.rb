@@ -15,6 +15,7 @@ require 'aspen/grammar'
 require 'aspen/contracts'
 require 'aspen/nickname_registry'
 
+
 module Aspen
 
   def self.compile_text(text)

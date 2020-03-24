@@ -44,7 +44,7 @@ Before reading this, make sure you know basic Cypher, to the point that you're c
 
 ### Command-Line Interface
 
-#### Compilation
+#### Compiling a file
 
 Once you write an Aspen file, compile it to Cypher (`.cql`) by running:
 
@@ -53,6 +53,16 @@ $ bundle exec bin/aspen compile /path/to/an-aspen-file.aspen
 ```
 
 This will generate a file Cypher file in the same folder, at `path/to/file.cql`.
+
+#### Watching a file or folder
+
+You may want to "watch" a file or folder of Aspen files for changes, and have them recompile to Cypher (`.cql`) every time you save a file.
+
+```sh
+$ bundle exec bin/aspen watch /path/containing/aspen/files
+```
+
+Press Ctrl+C to quit the watcher.
 
 #### (On the roadmap) Aspen Notebook
 
