@@ -100,13 +100,14 @@ Need an introduction to Cypher? [Get the Graph Databases ebook.](https://neo4j.c
 
 Need a refresher? [See the Cypher manual.](https://neo4j.com/docs/cypher-manual/current/)
 
-#### Terminology
 
-There are two important concepts in Aspen: __narratives__ and __discourses__.
+#### Parts of an Aspen file
 
-A __narrative__ is a description of data that records facts, observations, and perceptions about relationships. For example, in an Aspen file, we'll write `(Matt) [knows] (Brianna)` to describe the relationship between these two people.
+There are two important parts of any Aspen file: a __narrative__ and a __discourse__.
 
-A __discourse__ is a way of speaking or writing about a subject. Because Aspen doesn't automatically know what `(Matt) [knows] (Brianna)` means, we have to tell it. It knows that Matt and Brianna will be nodes, but doesn't know what their labels or attributes will be.
+A __narrative__ is a description of data that records facts, observations, and perceptions about relationships. For example, in an Aspen file, we'll describe a relationship between two people like this: `(Matt) [knows] (Brianna)`.
+
+A __discourse__ is a way of speaking or writing about a subject. Aspen doesn't automatically know what `(Matt) [knows] (Brianna)` means, so we have to tell it. Because they're wrapped in parentheses, Aspen knows that Matt and Brianna will be nodes, but it doesn't know enough to generate Cypher just from this line.
 
 In an Aspen file, the discourse is written at the top, and the narrative is written at the bottom, __always__ split by a line of just four dashes: `----`.
 
@@ -124,7 +125,9 @@ default Person, name
 (Matt) [knows] (Eliza).
 ```
 
-If the concepts of discourse and narrative aren't fully clear right now, that's okay—keep going. The rest of the tutorial should shed light on them. Also, this README was written pretty quickly, and if you have suggestions, please get in touch—your feedback will be well-received and appreciated!
+If the concepts of discourse and narrative aren't fully clear right now, that's okay—keep going. The rest of the tutorial should shed light on them. Also, this README was written pretty quickly, and if you have suggestions, please [contribute](https://github.com/beechnut/aspen/issues/1)—your feedback will be well-received and appreciated!
+
+[Help improve this tutorial.](https://github.com/beechnut/aspen/issues/1)
 
 #### Syntax
 
@@ -132,7 +135,7 @@ The simplest case for using Aspen is a simple relationship between two people.
 
 > Matt knows Brianna.
 
-Aspen doesn't know which of these are nodes and which are edges, so we have to tell it by adding parentheses `()` to indicate nodes and square brackets `[]` to indicate edges. This should look familiar if you've ever written Cypher—these conventions are the same intentionally.
+Aspen doesn't know which of these are nodes and which are edges, so we have to tell it by adding parentheses `()` to indicate nodes and square brackets `[]` to indicate edges. This should look familiar—these conventions are intentionally the same as Cypher.
 
 ```aspen
 (Matt) [knows] (Brianna).
@@ -140,9 +143,9 @@ Aspen doesn't know which of these are nodes and which are edges, so we have to t
 
 Now that that's out of the way, let's think about what we can conclude from this statement:
 
-- The strings of text `"Matt"` and `"Brianna"` are names
-- Matt and Brianna are people, so they would have a Person label
-- If Matt knows Brianna, Brianna knows Matt as well, so the relationship "knows" is reciprocal
+- The strings of text `"Matt"` and `"Brianna"` are names.
+- Matt and Brianna are people, so they should have a `:Person` label in Cypher.
+- If Matt knows Brianna, Brianna knows Matt as well, so the relationship "knows" is reciprocal.
 
 However, Aspen doesn't know any of this automatically!
 
@@ -150,15 +153,15 @@ So, we need to tell Aspen:
 
 - What attribute to assign the text `"Matt"` and `"Brianna"`
 - What kind of labels to apply to the nodes
-- That the relationship "knows" is implicitly reciprocal
+- That the relationship "knows" is a reciprocal (or "two-way", or "undirected") relationship
 
 ##### Default label and attribute name
 
-First, need to tell Aspen that, when it encounters an unlabeled node, that it should assume it's a person, and that the text is the name of the person.
+First, we need to tell Aspen that, when it encounters a simple or "short form" node like `(Matt)`, that it should assume it's a person, and that the text in parentheses is the name of the person.
 
-So, let's add a `default` line to the discourse section of the file, up at the top. This directs Aspen to assign unlabeled nodes a `:Person` label, and to use the an attribute called `name` when assigning the text inside the parentheses.
+To do this, let's add a `default` line to the discourse section of the file, up at the top. This directs Aspen to assign unlabeled nodes a `:Person` label, and that the text should be assigned to the Person's `name` attribute.
 
-```
+```aspen
  # Discourse
 default Person, name
 ----
@@ -173,27 +176,28 @@ MERGE (person_matt:Person { name: "Matt" })
 MERGE (person_brianna:Person { name: "Brianna" })
 
 MERGE (person_matt)-[:KNOWS]->(person_brianna)
+;
 ```
 
-##### Reciprocal relationships
+##### Making relationships reciprocal
 
-However, we want the relationship "knows" to be reciprocal.
+Take a look at the arrow—it's pointing from Matt to Brianna, suggesting that Matt knows Brianna but Brianna doesn't know Matt.
 
-> Note on reciprocal relationships:
+However, we want the relationship "knows" to be reciprocal, because if Matt knows Brianna, we can assume that Brianna knows Matt.
+
+> A note on reciprocal relationships:
 >
 > In Neo4j, the convention is for reciprocal (also known as bidirectional or undirected) relationships to be represented by a directional relationship. [Read more at GraphAware](https://graphaware.com/neo4j/2013/10/11/neo4j-bidirectional-relationships.html).
 >
 > However, we want our resulting Cypher to show a reciprocal relationship so we can read the Cypher and understand the intent of the code.
 
-In Cypher, if we wanted to show we intend to create a reciprocal relationship, we'd write "Matt knows Brianna" as follows. Notice there's no arrowhead.
+If we wanted to show that we intend to create a reciprocal relationship, we'd write Cypher for "Matt knows Brianna" as follows. Notice that there's no arrowhead—the relationship is "undirected".
 
 ```cypher
-...
-
 MERGE (person_matt)-[:KNOWS]-(person_brianna)
 ```
 
-To get this reciprocality, we list all the reciprocal relationships after the keyword   `reciprocal`:
+To get this reciprocality in Aspen, we list all the reciprocal relationships after the keyword `reciprocal`:
 
 ```aspen
 # Discourse
@@ -206,14 +210,24 @@ reciprocal knows
 
 This gives us the undirected relationship in Cypher that we want!
 
+If we had multiple reciprocal relationships, we'd write
 
-##### Multiple node types
+```aspen
+reciprocal knows, is friends with, is married to
+```
+
+This would ensure that `[:KNOWS]`, `[:IS_FRIENDS_WITH]`, and `[:IS_MARRIED_TO]` would all be encoded as undirected relationships.
+
+
+##### How to write nodes
 
 There are three ways to write nodes.
 
 - `(Matt)` - short form: requires a `default` line in the discourse
 - `(Person, Matt)` - default attribute form: requires a `default_attribute` line in the discourse
 - `(Person { name: "Matt" })` - full form or Cypher form: self-contained, requires nothing in the discourse
+
+> At present, the discourse still complains if nothing is set. [Help fix this issue.](https://github.com/beechnut/aspen/issues/4)
 
 If you need a node with multiple attributes, you can write:
 
@@ -222,8 +236,6 @@ If you need a node with multiple attributes, you can write:
 ```
 
 Notice how there's no preceding `:` in front of `Person` in Aspen, but there is in Cypher.
-
-
 
 But let's review how to handle when you have another node type (aka label) in your data, and you want to keep it short, using "default attribute form".
 
@@ -236,27 +248,34 @@ default Person, name
 (Matt) [works at] (Employer, UMass Boston)
 ```
 
-Note how this node starts with a label, followed by a comma, followed by the attribute we want to include.
-
-In order to tell Aspen to assign the text "UMass Boston" to an attribute called `company_name`, we add a `default_attribute` statement to the discourse section.
+Note how this node starts with a label, followed by a comma, followed by content to be assigned to an attribute. In order to tell Aspen to assign the text "UMass Boston" to an attribute called `company_name`, we add a `default_attribute` statement to the discourse section.
 
 ```
 # Discourse
 default Person, name
-default_attribute Employer, name
+default_attribute Employer, company_name
 ----
 # Narrative
 (Matt) [works at] (Employer, UMass Boston)
 ```
 
+The `default_attribute` line tells Aspen that when we encounter a node in default-attribute form, that it should assign the content for a node beginning  with `Employer` to `company_name`.
+
 Let's go over the differences between `default` and `default_attribute`.
 
 The `default` directive will catch any unlabeled nodes, like `(Matt)`, and label them. It will then assign the text inside the parentheses, `"Matt"`, to the attribute given as the default. If the default is `Person, name`, it will create a Person node with name "Matt".
 
+If we had a node like `(UMass Boston)`, it would result in the creation of a Person node with a name "UMass Boston":
+
+```cypher
+/* This is not what we wanted. */
+(:Person { name: "UMass Boston" })
+```
+
 The `default_attribute` directive will assign any nodes with the given label to the given attribute. So Aspen like `(Employer, ACME Corp.)` will create a node like
 
 ```cypher
-(:Employer, name: { "ACME Corp." })
+(:Employer { name: "ACME Corp." })
 ```
 
 
@@ -285,11 +304,13 @@ MERGE (person_matt)-[:WORKS_AT]->(employer_umass_boston)
 ;
 ```
 
+> A note about attribute types:
+>
 > One known issue is that `default` and `default_attribute` auto-type the attributes they're given, and try to make them either a string or number. So, if you pass a Massachusetts zip code like `02111` into a node in either short form or default attribute form, it will become integer `2111`.
 >
 > As a Massachusetts resident, I vowed never to let this happen in my software, so I intend to address this soon.
-
-[Help fix this issue.](https://github.com/beechnut/aspen/issues/9)
+>
+> [Help fix this issue.](https://github.com/beechnut/aspen/issues/9)
 
 #### Custom Grammars
 
@@ -302,6 +323,9 @@ Let's say you have a data model that tracks donations to local political candida
 To write this in vanilla Aspen, you'd write:
 
 ```
+default Person, name
+default_atttibute Donation, amount
+----
 (Matt) [gave donation] (Donation, 20.00).
 (Hélène) [received donation] (Donation, 20.00).
 ```
@@ -309,7 +333,7 @@ To write this in vanilla Aspen, you'd write:
 You may already be seeing some issues with this, like:
 
 - How does the language know whether those two donations are the same donation, or different donations of the same amount?
-- What currency is that? We can assume it's USD, but it's not self-evident.
+- What currency is that? We can assume it's USD from context, but it's not self-evident.
 - It takes two lines to express a single concept, which is counter to Aspen's goal of producing data efficiently.
 
 To solve all of these issues, we can define custom grammars.
@@ -351,7 +375,7 @@ Matt donated $20 to Hélène.
 Sarah donated $30 to Sumbul.
 ```
 
-We've changed two things here. (We still have to do the dollar amount. That's the next step.)
+We've changed two things here. (We still have to do the dollar amount. That will be the following step.)
 
 First, we replaced the literal names of "Matt" and "Hélène" with __matchers__ that will take the text of a sentence and assign it to variables `a` and `b`.
 
@@ -374,7 +398,7 @@ When we feed this custom grammar with the sentence "Matt donated $20 to Hélène
 
 > How does it know the text should be the `name` attribute? It's because we told Aspen the default attribute for Person is `name`. But, if you wanted to specify different attributes, you could write a Person node in default attribute form or full form, like:
 >
-> `(Person, Matt) donated $20 to (:Person { name: "Matt", age: 31 }).`
+> `(Person, Matt) donated $20 to (Person { name: "Matt", age: 31 }).`
 >
 > Your choice!
 
@@ -391,13 +415,12 @@ and populate it with the above data, we get the Cypher we're aiming for:
 ```cypher
 /* Simplified slightly for demonstration purposes */
 
-(:Person, { name: "Matt" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person, { name: "Hélène" })
+(:Person { name: "Matt" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person { name: "Hélène" })
 ```
 
 #### Adding matchers for other information
 
-Let's finish out our template, so we can adjust the donation amount.
-
+We still have to set the amount of the donation as a variable. If we left it as is, every donation would be $20 forever!
 ```
 ...
 
@@ -415,7 +438,15 @@ Okay, so we've added the matcher `(numeric dollar_amount)`, and used the variabl
 
 Aspen accepts three different types of matchers: numeric, string, and nodes. We've already seen nodes.
 
-__Numeric matchers__ will match typical (US) formats of numbers, including: 1, 0.000001, 100,000,000.00. Any numeric type (even if it has commas and periods) will be converted to numbers. Whole numbers will be converted to integers, and anything with a decimal point will be converted to floats.
+__Node matchers__  we've already used, and they come in the form of `(Label variable_name)`. If you type any word starting with an uppercase letter, that's the label that will be applied. Node matchers capture nodes in all three forms, so write them however you'd like—full form, default-attribute form, or short form!
+
+__Numeric matchers__ will match typical (US) formats of numbers, including:
+
+- `1` (integer)
+- `0.000001` (float)
+- `100,000,000.00` (float)
+
+For convenience, any numeric type (even if it has commas!) will be converted to numbers. Whole numbers will be converted to integers, and anything with a decimal point will be converted to floats.
 
 __String matchers__ will match anything in double-quotes. (Please don't use single quotes, as Aspen doesn't support them yet. [Help fix this issue.](https://github.com/beechnut/aspen/issues/6))
 
@@ -425,19 +456,21 @@ At the moment, if you have a string matcher like
 Matt works as a (string job_position) at UMass Boston.
 ```
 
-then make sure to write the job_position in quotes, like
+then make sure to write the value for `job_position` in quotes, like
 
 ```
 Matt works as a "research assistant" at UMass Boston.
 ```
 
-If you don't, it won't match.
+If you don't, it won't match!
 
-This will be addressed in a future update, because the quotes read as sarcastic. 😉 [(Help fix this issue.)](https://github.com/beechnut/aspen/issues/5)
+The quotes read as sarcastic, so we want to change this soon! [(Help fix this issue.)](https://github.com/beechnut/aspen/issues/5)
 
 #### Finishing our custom grammar
 
-Okay, let's see the whole file again, and add some more lines that this grammar can match, and some vanilla Aspen. Custom grammars play nicely with vanilla Aspen. (You can also have more than one `match..to..end` block to add more grammars. They'll try to match in the order in which they are defined in the file.)
+Let's see the whole file and add some more lines that this grammar can match, as well as some vanilla Aspen.
+
+Statements that match custom grammars don't need brackets and parentheses, but vanilla Aspen—Aspen that won't match custom grammars—always do.
 
 ```
 default Person, name
@@ -466,7 +499,9 @@ Yael gave a $20 donation to Sam.
 (Becky) [knows] (Matt).
 ```
 
-This will produce a wealth of Cypher. We're leaving it here in full so you can compare the two.
+> We didn't show this, but you can also have more than one `match..to..end` block to add more grammars. They'll try to match in the order in which they are defined in the file.)
+
+This will produce a wealth of Cypher. We're leaving it here in full so you can compare it to the Aspen.
 
 ```
 MERGE (person_matt:Person { name: "Matt" })
@@ -492,6 +527,7 @@ MERGE (person_becky)-[:KNOWS]-(person_matt)
 ;
 ```
 
+That's the end of the tutorial for now! Do you have more questions? Is something unclear? [Comment here or contribute your suggestions!](https://github.com/beechnut/aspen/issues/1)
 
 
 ## Background
