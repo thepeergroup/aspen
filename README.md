@@ -45,12 +45,11 @@ The following are needed to install Aspen:
 
 #### Installation
 
-1. Fork this repository.
-2. Clone your forked repository by running `git clone git@github.com:YOUR_USERNAME/aspen.git` in your terminal window.
-3. Navigate to the cloned repository by running `cd aspen`.
-4. Run `bundle install` to install Aspen's dependencies.
+1. Clone this repository by running `git clone https://github.com/beechnut/aspen.git` in your terminal window.
+2. Navigate to the cloned repository by running `cd aspen`.
+3. Run `bundle install` to install Aspen's dependencies.
 
-
+If you want to contribute, to set up your own fork, first fork the repository, then run `git clone https://github.com/YOUR_USERNAME_HERE/aspen.git`
 
 ## Usage
 
