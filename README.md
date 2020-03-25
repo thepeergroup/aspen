@@ -34,13 +34,25 @@ Admittedly, Aspen can't bring graphs to non-developers on its own, but it's tryi
 
 ## Installation
 
-[Help improve the installation process and instructions.](https://github.com/beechnut/aspen/issues/2)
+[Help improve the installation process, usage instructions, or tutorial.](https://github.com/beechnut/aspen/issues/2)
 
-Make sure you have Ruby 2.6+. Clone this repository, `cd` into it, and run `bundle install`.
+#### Prerequisites
+
+The following are needed to install Aspen:
+
+* **Ruby, version 2.6** or newer.
+* **Bundler** - Run `gem install bundler` in your terminal window to set up bundler after Ruby is already installed
+
+#### Installation
+
+1. Fork this repository.
+2. Clone your forked repository by running `git clone git@github.com:YOUR_USERNAME/aspen.git` in your terminal window.
+3. Navigate to the cloned repository by running `cd aspen`.
+4. Run `bundle install` to install Aspen's dependencies.
+
+
 
 ## Usage
-
-Before reading this, make sure you know basic Cypher, to the point that you're comfortable writing statements that create and/or query multiple nodes and edges.
 
 ### Command-Line Interface
 
@@ -81,6 +93,12 @@ Press Ctrl+C to quit the watcher.
 ### Aspen Tutorial
 
 [Help improve this tutorial.](https://github.com/beechnut/aspen/issues/1)
+
+Before reading this, make sure you know basic Cypher. I recommend you be able to comfortably write statements that create multiple nodes and edges, as well as statements that can query multiple nodes and edges. (If you don't, some of the concepts might not land.)
+
+Need an introduction to Cypher? [Get the Graph Databases ebook.](https://neo4j.com/graph-databases-book/)
+
+Need a refresher? [See the Cypher manual.](https://neo4j.com/docs/cypher-manual/current/)
 
 #### Terminology
 
