@@ -1,7 +1,7 @@
 require 'aspen/version'
 require 'aspen/errors'
 
-require 'aspen/configuration'
+require 'aspen/discourse'
 require 'aspen/body'
 require 'aspen/node'
 require 'aspen/edge'
@@ -12,7 +12,6 @@ require 'aspen/matcher'
 require 'aspen/grammar'
 
 require 'aspen/contracts'
-require 'aspen/nickname_registry'
 
 
 module Aspen
@@ -24,7 +23,7 @@ module Aspen
 
     head, _sep, body_text = text.partition("----")
 
-    context = Configuration.new(head)
+    context = Discourse.new(head)
     body    = Body.new(body_text, context: context)
 
     body.to_cypher

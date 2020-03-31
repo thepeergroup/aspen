@@ -2,7 +2,7 @@ require 'aspen'
 
 describe Aspen::Matcher do
 
-  # let(:context) { Aspen::Configuration.new("default Person, name") }
+  # let(:context) { Aspen::Discourse.new("default Person, name") }
 
   context "stepwise" do
 

@@ -1,13 +1,18 @@
 module Aspen
+  class Edge
 
-  Edge = Struct.new(:word, :context) do
+    def initialize(word, context)
+      @word = word
+      @context = context
+    end
+
     def text
-      word.match(Aspen::Statement::EDGE).captures.first
+      @word.match(Aspen::Statement::EDGE).captures.first
     end
 
     def reciprocal?
-      context.reciprocal? text
-    rescue Aspen::ConfigurationError
+      @context.reciprocal? text
+    rescue Aspen::DiscourseError
       false
     end
 

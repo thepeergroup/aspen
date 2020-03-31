@@ -3,7 +3,7 @@ require 'aspen'
 describe Aspen::Statement do
 
   let(:text) { "(Matt) [knows] (Brianna)." }
-  let (:context) { Aspen::Configuration.new("default Person, name") }
+  let (:context) { Aspen::Discourse.new("default Person, name") }
 
   let (:statement) { Aspen::Statement.from_text(text, context: context) }
 

@@ -1,15 +1,15 @@
 require 'dry/types'
 
+# It looks up the narrative in the grammar.
+# It raises if it can't find one.
+
+# It returns nodes.
+# It renders a nicknamed Cypher statement from context.
+
+# Grammar doesn't need context, but this does.
+
 module Aspen
   class CustomStatement
-
-    # It looks up the narrative in the grammar.
-    # It raises if it can't find one.
-
-    # It returns nodes.
-    # It renders a nicknamed Cypher statement from context.
-
-    # Grammar doesn't need context, but this does.
 
     include Dry::Monads[:maybe]
 
@@ -26,7 +26,6 @@ module Aspen
     # Example: text: "Matt gave Helene a donation."
     # Results:
     # => nodes: Matt, Helene
-    # => to_cypher
     def self.from_text(text, context: )
       new(
         nodes:  make_nodes(text, context),

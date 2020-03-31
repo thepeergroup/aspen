@@ -30,11 +30,9 @@ describe Aspen do
     end
   end
 
-  # TODO: In file 8, catch that Jane and Jane Smith are collisions
+  # TODO: In file 8, catch that Jack and Jack Donaghy are collisions
   # TODO: Check that there are no unreferenced variables in the templates.
   # TODO: Uncouple this from needing #default?, though it should need default_attribute
-
-
 
   let (:attribute_collision) {
     <<~ASPEN

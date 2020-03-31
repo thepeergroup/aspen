@@ -22,15 +22,15 @@ describe Aspen::CustomStatement do
     grammar
   }
 
-  let(:config) {
-    _config = Aspen::Configuration.new("default Person, name")
-    _config.add_grammar(grammar)
-    _config
+  let(:discourse) {
+    _discourse = Aspen::Discourse.new("default Person, name")
+    _discourse.add_grammar(grammar)
+    _discourse
   }
 
   let(:line) { "Matt gave Hélène $2,000." }
 
-  let(:custom_statement) { Aspen::CustomStatement.from_text(line, context: config) }
+  let(:custom_statement) { Aspen::CustomStatement.from_text(line, context: discourse) }
 
 
   context "valid line" do

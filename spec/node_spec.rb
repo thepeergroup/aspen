@@ -3,7 +3,7 @@ require 'aspen'
 describe Aspen::Node do
 
   # TODO Stub lookups
-  let(:context) { Aspen::Configuration.new("default Person, name\ndefault_attribute Employer, co_name") }
+  let(:context) { Aspen::Discourse.new("default Person, name\ndefault_attribute Employer, co_name") }
 
   context 'short form' do
     let(:expected) {

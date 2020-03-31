@@ -2,7 +2,7 @@ require 'aspen'
 
 describe Aspen::Grammar do
 
-  let(:context) { Aspen::Configuration.new("default Person, name") }
+  let(:context) { Aspen::Discourse.new("default Person, name") }
 
   let(:line) { "Matt gave Hélène $2,000." }
 

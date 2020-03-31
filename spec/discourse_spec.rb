@@ -1,34 +1,34 @@
 require 'aspen'
 
-describe Aspen::Configuration do
+describe Aspen::Discourse do
 
   context "individual lines" do
 
     let (:default) { "default Person, name" }
 
     it "configures a valid default" do
-      config = Aspen::Configuration.new(default)
-      expect(config.default_node_label).to eql("Person")
-      expect(config.default_node_attr_name).to eql("name")
-      expect(config.default_attr_name_for_label("Person")).to eql("name")
+      discourse = Aspen::Discourse.new(default)
+      expect(discourse.default_node_label).to eql("Person")
+      expect(discourse.default_node_attr_name).to eql("name")
+      expect(discourse.default_attr_name_for_label("Person")).to eql("name")
     end
 
     let (:default_attribute) { "default_attribute Employer, company_name" }
 
     it "configures a default attribute for the given label" do
-      config = Aspen::Configuration.new(default_attribute)
-      expect(config.default_attr_name_for_label("Employer")).to eql("company_name")
+      discourse = Aspen::Discourse.new(default_attribute)
+      expect(discourse.default_attr_name_for_label("Employer")).to eql("company_name")
 
       expect {
-        config.default_attr_name_for_label("Person")
-      }.to raise_error(Aspen::ConfigurationError)
+        discourse.default_attr_name_for_label("Person")
+      }.to raise_error(Aspen::DiscourseError)
     end
 
     let (:reciprocal) { "reciprocal knows, is friends with" }
 
     it "configures reciprocal relationships" do
-      config = Aspen::Configuration.new(reciprocal)
-      expect(config.reciprocal).to eq(["knows", "is friends with"])
+      discourse = Aspen::Discourse.new(reciprocal)
+      expect(discourse.reciprocal).to eq(["knows", "is friends with"])
     end
 
   end
@@ -36,7 +36,7 @@ describe Aspen::Configuration do
   let (:together) {
     # Keep the blank line between "default_attribute" and "reciprocal".
     # We're making sure the configuration can handle blank lines.
-    Aspen::Configuration.new(
+    Aspen::Discourse.new(
       <<~ASPEN
         default Person, name
         default_attribute Employer, company_name
@@ -64,20 +64,20 @@ describe Aspen::Configuration do
 
     it "raises with a no comma" do
       expect {
-        Aspen::Configuration.new(no_comma)
-      }.to raise_error(Aspen::ConfigurationError)
+        Aspen::Discourse.new(no_comma)
+      }.to raise_error(Aspen::DiscourseError)
     end
 
     it "raises with a bad label" do
       expect {
-        Aspen::Configuration.new(default_bad_label)
-      }.to raise_error(Aspen::ConfigurationError)
+        Aspen::Discourse.new(default_bad_label)
+      }.to raise_error(Aspen::DiscourseError)
     end
 
     it "raises with a bad attribute name" do
       expect {
-        Aspen::Configuration.new(default_bad_attr_name)
-      }.to raise_error(Aspen::ConfigurationError)
+        Aspen::Discourse.new(default_bad_attr_name)
+      }.to raise_error(Aspen::DiscourseError)
     end
 
     let (:default_attribute_bad_label) {
@@ -90,14 +90,14 @@ describe Aspen::Configuration do
 
     it "raises with a bad attribute name" do
       expect {
-        Aspen::Configuration.new(default_attribute_bad_label)
-      }.to raise_error(Aspen::ConfigurationError)
+        Aspen::Discourse.new(default_attribute_bad_label)
+      }.to raise_error(Aspen::DiscourseError)
     end
 
     it "raises with a bad attribute name" do
       expect {
-        Aspen::Configuration.new(default_attribute_bad_attr_name)
-      }.to raise_error(Aspen::ConfigurationError)
+        Aspen::Discourse.new(default_attribute_bad_attr_name)
+      }.to raise_error(Aspen::DiscourseError)
     end
 
     let (:bad_starting_tokens) {
@@ -107,23 +107,23 @@ describe Aspen::Configuration do
     it "raises with a bad starting token" do
       bad_starting_tokens.each do |line|
         expect {
-          Aspen::Configuration.new(line)
-        }.to raise_error(Aspen::ConfigurationError)
+          Aspen::Discourse.new(line)
+        }.to raise_error(Aspen::DiscourseError)
       end
     end
 
     it "raises with soon to be implemented options" do
       %w( allow require implicit ).each do |line|
         expect {
-          Aspen::Configuration.new(line)
-        }.to raise_error(Aspen::ConfigurationError)
+          Aspen::Discourse.new(line)
+        }.to raise_error(Aspen::DiscourseError)
       end
     end
   end
 
   context "load custom grammars" do
 
-    let(:config) { Aspen::Configuration.new(match_block) }
+    let(:discourse) { Aspen::Discourse.new(match_block) }
 
     context "with a single match line" do
 
@@ -140,9 +140,9 @@ describe Aspen::Configuration do
       let(:line) { "Matt gave a donation to Hélène." }
 
       it "builds one matcher" do
-        expect(config.grammar).to be_an(Aspen::Grammar)
-        expect(config.grammar.count).to eq(1)
-        expect(config.grammar.match?(line)).to be true
+        expect(discourse.grammar).to be_an(Aspen::Grammar)
+        expect(discourse.grammar.count).to eq(1)
+        expect(discourse.grammar.match?(line)).to be true
       end
     end
 
@@ -160,9 +160,9 @@ describe Aspen::Configuration do
       }
 
       it "builds two matchers" do
-        expect(config.grammar.count).to eq(2)
-        expect(config.grammar.match?("Matt gave a donation to Hélène.")).to be true
-        expect(config.grammar.match?("Matt donated to Hélène.")).to be true
+        expect(discourse.grammar.count).to eq(2)
+        expect(discourse.grammar.match?("Matt gave a donation to Hélène.")).to be true
+        expect(discourse.grammar.match?("Matt donated to Hélène.")).to be true
       end
     end
 
@@ -183,19 +183,9 @@ describe Aspen::Configuration do
       }
 
       it "builds one matchers" do
-        expect(config.grammar.count).to eq(1)
-        expect(config.grammar.match?(sentence)).to be true
+        expect(discourse.grammar.count).to eq(1)
+        expect(discourse.grammar.match?(sentence)).to be true
       end
     end
   end
 end
-
-
-# config = <<~CONFIG
-#       default Person, name
-#       match
-#         - (Person a) gave (Person b) $(numeric amt).
-#         - (Person a) donated $(float amt) to (Person b).
-#       to
-#         "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
-#     CONFIG

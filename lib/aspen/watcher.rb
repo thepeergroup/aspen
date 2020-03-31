@@ -5,9 +5,9 @@ module Aspen
 
     def initialize(path: , options: {})
       @path     = path
-      @logger   = options.fetch(:logger) { Logger.new("aspen-watch.log") }
-      @database = options.fetch (:database) { false }
-      @drop = options.fetch (:drop) { false }
+      @logger   = options.fetch(:logger)   { Logger.new(STDOUT) }
+      @database = options.fetch(:database) { false }
+      @drop     = options.fetch(:drop)     { false }
     end
 
     def start

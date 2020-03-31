@@ -1,7 +1,7 @@
 require 'dry/container'
 
 module Aspen
-  class Configuration
+  class Discourse
 
     include Dry::Container::Mixin
 
@@ -9,7 +9,6 @@ module Aspen
 
     def initialize(config_text)
       @text = config_text
-      @cursor = 0
       @grammar = Aspen::Grammar.new()
       tag_lines
       process_tags
@@ -22,7 +21,7 @@ module Aspen
     def default_node_label
       resolve("default.unlabeled")[:label]
     rescue Dry::Container::Error
-      raise Aspen::ConfigurationError, Aspen::Errors.messages(:no_default_line)
+      raise Aspen::DiscourseError, Aspen::Errors.messages(:no_default_line)
     end
 
     def default_node_attr_name
@@ -32,13 +31,13 @@ module Aspen
     def default_attr_name_for_label(label)
       resolve("default.attr_names.#{label}")
     rescue Dry::Container::Error => e
-      raise Aspen::ConfigurationError, Aspen::Errors.messages(:need_default_attribute, label)
+      raise Aspen::DiscourseError, Aspen::Errors.messages(:need_default_attribute, label)
     end
 
     def reciprocal
       resolve('relationships.reciprocal')
     rescue Dry::Container::Error => e
-      raise Aspen::ConfigurationError, e.message
+      raise Aspen::DiscourseError, e.message
     end
 
     def reciprocal?(relationship)
@@ -79,10 +78,10 @@ module Aspen
         when :MATCH_TO, :MATCH_TEMPLATE then
           [:MATCH_TEMPLATE, line.strip]
         else
-          raise Aspen::ConfigurationError, Aspen::Errors.messages(:expected_match_precedent, @tags.last.first)
+          raise Aspen::DiscourseError, Aspen::Errors.messages(:expected_match_precedent, @tags.last.first)
         end
       else
-        raise Aspen::ConfigurationError, Aspen::Errors.messages(:no_config_tag, line)
+        raise Aspen::DiscourseError, Aspen::Errors.messages(:no_config_tag, line)
       end
     end
 
@@ -100,7 +99,7 @@ module Aspen
         # NO OP - skip empty lines
       when :DEFAULT
         if default_registered
-          raise Aspen::ConfigurationError, Aspen::Errors.messages(:default_already_registered)
+          raise Aspen::DiscourseError, Aspen::Errors.messages(:default_already_registered)
         else
           label, attr_name = assert_default_contract(args)
           register("default.unlabeled", { label: label, attr_name: attr_name })
@@ -127,7 +126,7 @@ module Aspen
         end
         @under_construction = [] # Reset
       else
-        raise Aspen::ConfigurationError, Aspen::Errors.messages(:bad_keyword, tag)
+        raise Aspen::DiscourseError, Aspen::Errors.messages(:bad_keyword, tag)
       end
     end
 
@@ -141,7 +140,7 @@ module Aspen
       contract = Aspen::Contracts::DefaultAttributeContract.new
       result = contract.call(label: label, attr_name: attr_name)
       if result.errors.any?
-        raise Aspen::ConfigurationError, result.errors.map { |k, v| "#{k} #{Array(v).join(", ")}" }
+        raise Aspen::DiscourseError, result.errors.map { |k, v| "#{k} #{Array(v).join(", ")}" }
       end
       [label, attr_name]
     end
