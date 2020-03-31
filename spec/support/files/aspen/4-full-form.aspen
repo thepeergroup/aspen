@@ -1,0 +1,5 @@
+default Person, name
+reciprocal knows
+----
+
+(Person { name: "Liz", age: 36 }) [knows] (Jack)

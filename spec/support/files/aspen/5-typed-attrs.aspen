@@ -1,0 +1,4 @@
+default PollingPlace, voters
+----
+
+(PollingPlace, 100) [outmarketed] (PollingPlace, 10)

@@ -1,0 +1,7 @@
+default Person, name
+default_attribute Employer, company_name
+reciprocal knows
+----
+(Liz) [knows] (Jack)
+
+(Liz) [works at] (Employer, NBC Universal)

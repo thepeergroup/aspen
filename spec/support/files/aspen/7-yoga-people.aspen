@@ -1,0 +1,23 @@
+default Person, name
+default_attribute Employer, company_name
+default_attribute Studio, company_name
+
+reciprocal knows, is friends with
+
+----
+
+(Matt) [is friends with] (Brianna).
+(Matt) [is friends with] (Eliza).
+(Brianna) [is friends with] (Eliza).
+
+(Brianna) [knows] (Sarah).
+(Eliza) [knows] (Holland).
+(Sarah) [teaches at] (Studio, The Corner Studio)
+(Holland) [teaches at] (Studio, The Corner Studio)
+(Jenna) [owns] (Studio, The Corner Studio)
+(Jenna) [teaches at] (Studio, The Corner Studio)
+
+(Rebecca) [knows] (Jenna)
+(Rebecca) [is friends with] (Matt)
+(Rebecca) [is friends with] (Brianna)
+(Rebecca) [knows] (Eliza)

@@ -1,0 +1,34 @@
+default Person, name
+default_attribute Organization, name
+
+match
+  (Person a) is (Person b)'s (string r).
+to
+  {{{a}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{b}}}
+end
+
+match
+  (Person p) works at (Organization org).
+to
+  {{{p}}}-[:WORKS_FOR]->{{{org}}}
+end
+
+match
+  (Person p) is a (string r) at (Organization org).
+  (Person p) is the (string r) of (Organization org).
+to
+  {{{p}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{org}}}
+end
+
+match
+  (Person p) and (Person q) are best friends.
+to
+  {{{p}}}-[:IS_FRIENDS_WITH { desc: "best" }]-{{{q}}}
+end
+----
+
+Jonathan is Jack Donaghy's "personal assistant".
+Jonathan works at NBC.
+Jack Donaghy is the "CEO" of NBC.
+Liz Lemon is a "TV Producer" at NBC.
+Liz Lemon and Jack Donaghy are best friends.
