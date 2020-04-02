@@ -3,11 +3,10 @@ require 'dry/cli'
 require 'dry/cli/utils/files'
 
 require 'listen'
-require 'neo4j/core'
-require 'neo4j/core/cypher_session/adaptors/http'
-
 require 'aspen'
-require 'aspen/watcher'
+
+require 'aspen/actions/compile'
+require 'aspen/actions/watch'
 
 module Aspen
   module CLI
@@ -36,28 +35,7 @@ module Aspen
         ]
 
         def call(path: , **options)
-          basename = File.basename(path, ".aspen")
-          dir = File.dirname(path)
-          dest = File.expand_path("#{basename}.cql", dir)
-          cypher = Aspen.compile_text(File.read(path))
-          File.open(dest, 'w') { |file| file << cypher }
-
-          puts "Compiled #{basename}.aspen to #{basename}.cql."
-
-          if options.fetch(:database) { false }
-            url = options.fetch(:database)
-            puts "About to push to Neo4j at #{url}"
-            adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(url, {})
-            session = Neo4j::Core::CypherSession.new(adaptor)
-            if options.fetch(:drop)
-              print "About to drop data from database..."
-              session.query("MATCH (n) DETACH DELETE n")
-              print "OK\n"
-            end
-            print "About to push data to database..."
-            res = session.query(cypher) # 'MATCH (n) RETURN n LIMIT 10'
-            print "OK\n"
-          end
+          Aspen::Actions::Compile.new(path, options).call
         end
       end
 
@@ -65,9 +43,19 @@ module Aspen
         class Run < Dry::CLI::Command
           desc "Watch a single file and automatically compile it"
 
-          argument :path, required: true, desc: "Folder or file to watch for changes"
-          option :database, type: :string, desc: "Database URL", aliases: ["d"]
-          option :drop, type: :boolean, desc: "DANGER: Drops db before every push"
+          argument :path,
+            type:     :string,
+            required: true,
+            desc:     "Folder or file to watch for changes"
+
+          option :database,
+            type:    :string,
+            desc:    "Database URL",
+            aliases: ["d"]
+
+          option :drop,
+            type: :boolean,
+            desc: "DANGER: Drops db before every push"
 
           example [
             "folder/with/aspen/                                      # Recompiles files upon changes",
@@ -75,7 +63,7 @@ module Aspen
           ]
 
           def call(path: , **options)
-            Aspen::Watcher.new(path: path, options: options).start
+            Aspen::Actions::Watch.new(path: path, options: options).call
           end
         end
       end
