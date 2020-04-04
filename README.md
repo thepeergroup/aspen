@@ -57,7 +57,7 @@ To check if your installation worked `cd` to the cloned repository and type the 
 $ bundle exec bin/aspen compile ./Example/example.aspen
 ```
 
-Its should generate a `.cql` file in the `Example` folder that looks this:
+It should generate a `.cql` file in the `Example` folder that looks this:
 
 ```cypher
 MERGE (person_matt:Person { name: "Matt" })
