@@ -51,6 +51,29 @@ The following are needed to install Aspen:
 
 If you want to contribute, to set up your own fork, first fork the repository, then run `git clone https://github.com/YOUR_USERNAME_HERE/aspen.git`
 
+To check if your installation worked `cd` to the cloned repository and type the following:
+
+```sh
+$ bundle exec bin/aspen compile ./Example/example.aspen
+```
+
+Its should generate a `.cql` file that looks this:
+
+```cypher
+MERGE (person_matt:Person { name: "Matt" })
+MERGE (person_brianna:Person { name: "Brianna" })
+MERGE (person_eliza:Person { name: "Eliza" })
+MERGE (employer_umass_boston:Employer { company_name: "UMass Boston" })
+
+MERGE (person_matt)-[:IS_FRIENDS_WITH]-(person_brianna)
+MERGE (person_eliza)-[:KNOWS]-(person_brianna)
+MERGE (person_matt)-[:IS_FRIENDS_WITH]-(person_eliza)
+MERGE (person_matt)-[:WORKS_FOR]->(employer_umass_boston)
+; 
+```
+
+If this happens without errors, you should be good to go.
+
 ## Usage
 
 ### Command-Line Interface
