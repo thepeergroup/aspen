@@ -7,6 +7,7 @@ module Aspen
   class DiscourseError < Error ; end
   class LookupError    < Error ; end
   class MatchError     < Error ; end
+  class ParseError     < Error ; end
   class StatementError < Error ; end
   class TagError       < Error ; end
 
@@ -19,6 +20,15 @@ module Aspen
 
     def self._messages
       {
+        unexpected_token: -> (args) {
+          <<~ERROR
+            Within state #{args.last}
+            Unexpected token "#{args.first.matched}" at position #{args.first.charpos}
+
+            Next bit:
+              #{args.first.peek(30).inspect}
+          ERROR
+        },
         default_already_registered: -> (args) {
           <<~ERROR
             You have already set a default label and attribute name for unlabeled nodes.

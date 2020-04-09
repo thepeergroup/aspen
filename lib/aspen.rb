@@ -1,6 +1,11 @@
 require 'aspen/version'
 require 'aspen/errors'
 
+require 'aspen/ast'
+require 'aspen/lexer'
+require 'aspen/parser'
+require 'aspen/compiler'
+
 require 'aspen/discourse'
 require 'aspen/body'
 require 'aspen/node'
@@ -15,6 +20,12 @@ require 'aspen/contracts'
 
 
 module Aspen
+
+  def self.compile_code(code, environment = {})
+    tokens = Lexer.tokenize(code)
+    ast = Parser.parse(tokens)
+    Compiler.render(ast, environment)
+  end
 
   def self.compile_text(text)
     if text.strip.empty?

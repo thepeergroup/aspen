@@ -8,6 +8,33 @@ module Aspen
     extend Dry::Monads[:maybe]
     include Dry::Monads[:maybe]
 
+    attr_reader :label, :attributes, :nickname
+    attr_writer :nickname
+
+    def initialize(label: , attributes: {})
+      @label      = label
+      @attributes = attributes
+      @nickname   = nickname_from_first_attr_value
+    end
+
+    def self.from_ast(node_ast, discourse)
+      # Get the label, falling back to the default label.
+      label = Maybe(node_ast.label).value_or(discourse.default_label)
+      # Get the attribute name, falling back to the default attribute name.
+      attribute_name  = Maybe(nil).value_or(discourse.default_attr_name_for_label(label))
+      attribute_value = node_ast.content
+      nickname = attribute_value.downcase
+
+      new(
+        label: label,
+        attributes: { attribute_name => attribute_value }
+      )
+    end
+
+    def nickname_from_first_attr_value
+      "#{@label}-#{@attributes.values.first}".parameterize.underscore
+    end
+
     # Short (S) Form: (Johnny B. Goode), (Hélène)
     SHORT_FORM = /\(([[[:alpha:]][[:digit:]]\s\.]+?)\)/
 
@@ -18,16 +45,6 @@ module Aspen
     # Full Cypher (F) Form: (Employer name: "UMass Boston", location: "William Morrissey Blvd.")
     FULL_FORM = Aspen::Statement::NODE
 
-    attr_reader :label, :attributes, :nickname
-    attr_writer :nickname
-
-    def initialize(label: , attributes: {}, nickname: nil)
-      @label = label
-      @attributes = attributes
-      if Maybe(nickname).value_or(false)
-        @nickname = nickname
-      end
-    end
 
     def to_cypher
       if nickname
