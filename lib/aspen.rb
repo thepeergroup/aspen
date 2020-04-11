@@ -6,6 +6,8 @@ require 'aspen/lexer'
 require 'aspen/parser'
 require 'aspen/compiler'
 
+require 'aspen/system_default'
+
 require 'aspen/discourse'
 require 'aspen/body'
 require 'aspen/node'

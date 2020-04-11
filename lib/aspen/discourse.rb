@@ -1,165 +1,94 @@
-require 'dry/container'
+require 'active_support/core_ext/hash/indifferent_access'
+require 'dry/monads'
+require 'yaml'
+
+require 'aspen/schemas/discourse_schema'
 
 module Aspen
   class Discourse
 
-    include Dry::Container::Mixin
+    include Dry::Monads[:maybe]
 
-    attr_reader :text, :grammar, :tags
+    attr_reader :data, :grammar
 
-    def initialize(config_text)
-      @text = config_text
-      @grammar = Aspen::Grammar.new()
-      tag_lines
-      process_tags
+    def self.from_yaml(yaml)
+      from_hash YAML.load(yaml)
+    end
+
+    def self.from_hash(data)
+      result = Schemas::DiscourseSchema.call(data)
+      if result.success?
+        new(data)
+      else
+        raise Aspen::Error, result.errors
+      end
+    end
+
+    def initialize(data = {})
+      @data = data.with_indifferent_access
+      @grammar = Grammar.new
+      process_grammar
+    end
+
+    def default_label
+      maybe_label = Maybe(@data.dig(:default, :label))
+      maybe_label.value_or(Aspen::SystemDefault.label)
+    end
+
+    def default_attr_name(label)
+      maybe_attr = Maybe(@data.dig(:default, :attributes, label.to_sym))
+      maybe_attr.value_or(primary_default_attr_name)
+    end
+
+    def label_allowed?(label)
+      list = whitelist_for(:nodes)
+      return true if list.empty?
+      list.include? label
+    end
+
+    def edge_allowed?(edge)
+      list = whitelist_for(:relationships)
+      return true if list.empty?
+      list.include? edge
+    end
+
+    def reciprocal
+      maybe_list = Maybe(@data.dig(:reciprocal))
+      maybe_list.value_or(Array.new)
+    end
+
+    def reciprocal?(edge_name)
+      reciprocal.include? edge_name
     end
 
     def add_grammar(grammar)
       @grammar = grammar
     end
 
-    def default_node_label
-      resolve("default.unlabeled")[:label]
-    rescue Dry::Container::Error
-      raise Aspen::DiscourseError, Aspen::Errors.messages(:no_default_line)
-    end
-
-    def default_node_attr_name
-      resolve("default.unlabeled")[:attr_name]
-    end
-
-    def default_attr_name_for_label(label)
-      resolve("default.attr_names.#{label}")
-    rescue Dry::Container::Error => e
-      raise Aspen::DiscourseError, Aspen::Errors.messages(:need_default_attribute, label)
-    end
-
-    def reciprocal
-      resolve('relationships.reciprocal')
-    rescue Dry::Container::Error => e
-      raise Aspen::DiscourseError, e.message
-    end
-
-    def reciprocal?(relationship)
-      reciprocal.include? relationship
-    end
-
-    alias_method :reciprocal_relationships, :reciprocal
-
-    def tag_lines
-      @tags = []
-      @text.lines.each { |line| @tags << tag_line(line) }
-      @tags
-    end
-
-    def tag_line(line)
-      case line
-      when /^\s*$/
-        [:EMPTY_LINE]
-      when /^default\s/
-        [:DEFAULT, split_attrs(line)]
-      when /^default_attribute\s/
-        [:DEFAULT_ATTRIBUTE, split_attrs(line)]
-      when /^reciprocal\s/
-        [:RECIPROCAL, split_attrs(line)]
-      when /^match/
-        [:MATCH_START]
-      when /^to/
-        [:MATCH_TO]
-      when /^end/
-        [:BLOCK_END]
-      # Two spaces, followed by non-space characters
-      when /^\s{2}\S/
-        case @tags.last.first
-        # A match statement can come after a start or another statement
-        when :MATCH_START, :MATCH_STATEMENT
-          [:MATCH_STATEMENT, line.strip]
-        # A match template can have multiple lines.
-        when :MATCH_TO, :MATCH_TEMPLATE then
-          [:MATCH_TEMPLATE, line.strip]
-        else
-          raise Aspen::DiscourseError, Aspen::Errors.messages(:expected_match_precedent, @tags.last.first)
-        end
-      else
-        raise Aspen::DiscourseError, Aspen::Errors.messages(:no_config_tag, line)
-      end
-    end
-
     private
 
-    def split_attrs(line)
-      _, _, info = line.partition(" ")
-      info.split(",").map(&:strip)
+    def primary_default_attr_name
+      maybe_attr = Maybe(@data.dig(:default, :attribute))
+      maybe_attr.value_or(Aspen::SystemDefault.attr_name)
     end
 
-    def process_tag(tagged_line)
-      tag, args = tagged_line
-      case tag
-      when :EMPTY_LINE
-        # NO OP - skip empty lines
-      when :DEFAULT
-        if default_registered
-          raise Aspen::DiscourseError, Aspen::Errors.messages(:default_already_registered)
-        else
-          label, attr_name = assert_default_contract(args)
-          register("default.unlabeled", { label: label, attr_name: attr_name })
-          register("default.attr_names.#{label}", attr_name)
+    def whitelist_for(stuff)
+      maybe_whitelist = Maybe(@data.dig(:only, stuff))
+      maybe_whitelist.value_or("").split(",").map(&:strip)
+    end
+
+    def process_grammar
+      return false unless configured_grammar
+      configured_grammar.each do |block|
+        Array(block.fetch(:match)).each do |matcher|
+          matcher_object = Matcher.new(matcher, block.fetch(:template))
+          grammar.add(matcher_object)
         end
-      when :DEFAULT_ATTRIBUTE
-        label, attr_name = assert_default_contract(args)
-        register("default.attr_names.#{label}", attr_name)
-      when :RECIPROCAL
-        register("relationships.reciprocal", args)
-      when :MATCH_START
-        @under_construction = []
-      when :MATCH_TO
-        # NO OP
-      when :MATCH_STATEMENT
-        @under_construction << [:STATEMENT, args]
-      when :MATCH_TEMPLATE
-        @under_construction << [:TEMPLATE, args]
-      when :BLOCK_END
-        statements = @under_construction.select { |e| e.first == :STATEMENT }.map(&:last)
-        template = @under_construction.select { |e| e.first == :TEMPLATE }.map(&:last).join("\n")
-        statements.map do |statement|
-          @grammar.add Matcher.new(statement, template)
-        end
-        @under_construction = [] # Reset
-      else
-        raise Aspen::DiscourseError, Aspen::Errors.messages(:bad_keyword, tag)
       end
     end
 
-    def process_tags
-      @under_construction = []
-      @tags.each { |tag| process_tag(tag) }
-    end
-
-    def assert_default_contract(args)
-      label, attr_name = args
-      contract = Aspen::Contracts::DefaultAttributeContract.new
-      result = contract.call(label: label, attr_name: attr_name)
-      if result.errors.any?
-        raise Aspen::DiscourseError, result.errors.map { |k, v| "#{k} #{Array(v).join(", ")}" }
-      end
-      [label, attr_name]
-    end
-
-    def default_registered
-      begin
-        resolve("default.unlabeled")
-      rescue Dry::Container::Error
-        false
-      end
-    end
-
-    def has_default_line?
-      default_line.present?
-    end
-
-    def default_info
-      _, _, info = default_line.partition(" ")
-      info.split(", ").map(&:strip)
+    def configured_grammar
+      @cg ||= Maybe(@data.dig(:grammar)).value_or(false)
     end
 
   end
