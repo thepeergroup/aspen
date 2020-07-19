@@ -1,7 +1,19 @@
-default Person, name
-default_attribute Employer, company_name
-reciprocal knows
+default:
+  label: Person
+  attribute: name
+  attributes:
+    Employer: company_name
+    Show: title
+reciprocal: knows
 ----
-(Liz) [knows] (Jack)
 
-(Liz) [works at] (Employer, NBC Universal)
+(Liz) [runs] (Show: TGS with Tracy Jordan).
+(Tracy) [acts in] (Show: TGS with Tracy Jordan).
+(Jenna) [acts in] (Show: TGS with Tracy Jordan).
+(Pete) [produces] (Show: TGS with Tracy Jordan).
+(Liz) [reports to] (Jack).
+(Jack) [reports to] (Hank Hooper).
+(Pete) [reports to] (Liz).
+(Pete) [played guitar for] (Jack).
+(Hank) [runs] (Employer: Kabletown).
+(Liz) [works at] (Employer: Kabletown).

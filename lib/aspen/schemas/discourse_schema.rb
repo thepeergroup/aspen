@@ -28,20 +28,18 @@ require 'aspen/schemas/grammar_schema'
 module Aspen
   module Schemas
 
-    LABEL = /^([A-Z][A-Za-z0-9]+)+$/
+    LABEL      = /^([A-Z][A-Za-z0-9]+)+$/
     LABEL_LIST = /^([A-Z][A-Za-z0-9]+)(,\s*([A-Z][A-Za-z0-9]+))*$/
-    EDGE_LIST = /^([A-Za-z\s]+)(,\s*[A-Za-z\s]+)*$/
-    IDENTIFIER = /^[A-Za-z]\w*$/
-    IDENTIFIER_LIST = /^(\w+)(,\s*\w+)*$/
+    EDGE_LIST  = /^([A-Za-z\s]+)(,\s*[A-Za-z\s]+)*$/
+    IDENT      = /^[A-Za-z]\w*$/
+    IDENT_LIST = /^(\w+)(,\s*\w+)*$/
 
     DiscourseSchema = Dry::Schema.Params do
-      # There's an issue with dry/schema when validating keys
-      # and you have an array of strings.
-      # config.validate_keys = true
+      config.validate_keys = true
 
       optional(:default).hash do
         optional(:label).filled(:string, format?: LABEL)
-        optional(:attribute).filled(:string, format?: IDENTIFIER)
+        optional(:attribute).filled(:string, format?: IDENT)
         optional(:attributes).filled(:hash) # TODO Validate hash
       end
 
@@ -51,7 +49,10 @@ module Aspen
       end
 
       # TODO Validate that there are no reciprocal relationships
-      # Not listed
+      # not listed in `only`
+      # Is there a way to do something like:
+      #   included_in?: [ self.only ] if self.only
+      # Yes! If we make this a validation!
       optional(:reciprocal).filled(:string, format?: EDGE_LIST)
 
       optional(:grammar).array(GrammarSchema)

@@ -1,3 +1,6 @@
+require 'dry/monads'
+include Dry::Monads[:maybe]
+
 module Aspen
   class Compiler
 
@@ -17,31 +20,74 @@ module Aspen
     end
 
     def discourse
-      Discourse.from_env(@environment)
+      @discourse ||= Discourse.from_hash(@environment)
     end
 
     def visit(node)
       short_name = node.class.to_s.split('::').last.downcase
-      send("visit_#{short_name}", node)
+      method_name = "visit_#{short_name}"
+      puts "---- #{method_name}"
+      # puts node.inspect
+      send(method_name, node)
     end
 
     def visit_narrative(node)
-      statements = node.statements.map { |statement| visit(statement) }
-      nodes = statements.flat_map(&:nodes).uniq.map(&:to_cypher)
-      edges = statements.flat_map(&:relationship_cypher)
-      return [nodes, "\n\n", edges, "\n;\n"].join()
+      statements    = node.statements.map { |statement| visit(statement) }
+      nodes         = format_nodes(statements)
+      relationships = format_relationships(statements)
+      return [nodes, "\n\n",  relationships, "\n;\n"].join()
+    end
+
+    def format_nodes(statements)
+      statements.
+        flat_map(&:nodes).
+        map { |n| "MERGE #{n.to_cypher}" }.
+        uniq.
+        join("\n")
+    end
+
+    def format_relationships(statements)
+      statements.
+        flat_map(&:to_cypher).
+        map { |n| "MERGE #{n}" }.
+        join("\n")
     end
 
     def visit_statement(node)
-      # Process statement nodes
+      Statement.new(
+        origin: visit(node.origin),
+        edge: visit(node.edge),
+        destination: visit(node.destination)
+      )
     end
 
     def visit_node(node)
-      Aspen::Node.from_ast(node, discourse)
+      puts node.inspect
+      # Get the label, falling back to the default label.
+      label = visit(node.label)
+      # puts "---> label: #{label.inspect}"
+
+      # Get the attribute name, falling back to the default attribute name.
+      attribute_name  = Maybe(nil).value_or(discourse.default_attr_name(label))
+      attribute_value = visit(node.content)
+      nickname = attribute_value.downcase
+
+      Aspen::Node.new(
+        label: label,
+        attributes: { attribute_name => attribute_value }
+      )
     end
 
     def visit_edge(node)
-      # Process edge nodes
+      Aspen::Edge.new(
+        word: visit(node.content),
+        reciprocal: discourse.reciprocal?(visit(node.content))
+      )
+    end
+
+    def visit_label(node)
+      content = visit(node.content)
+      Maybe(content).value_or(discourse.default_label)
     end
 
     def visit_content(node)

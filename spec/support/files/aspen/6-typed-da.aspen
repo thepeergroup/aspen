@@ -1,5 +1,8 @@
-default Person, name
-default_attribute PollingPlace, voters
+default:
+  label: Person
+  attribute: name
+  attributes:
+    PollingPlace: voters
 ----
 
 (PollingPlace, 100) [outmarketed] (PollingPlace, 10)

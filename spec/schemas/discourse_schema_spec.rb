@@ -11,12 +11,7 @@ describe Aspen::Schemas::DiscourseSchema do
     "what's happening, does anybody know?"
   ]}
 
-  pending "rejects superflous keys" do
-    fail """
-      There's an issue with dry/schema when you set
-          config.validate_keys = true
-          and have a string array.
-    """
+  it "rejects superflous keys" do
     config = { heck: "content" }
     expect(described_class.call(config).errors).to_not be_empty
   end

@@ -15,7 +15,8 @@ module Aspen
       from_hash YAML.load(yaml)
     end
 
-    def self.from_hash(data)
+    def self.from_hash(data = {})
+      raise ArgumentError, "Must be a hash, was a #{data.class}" unless data.is_a? Hash
       result = Schemas::DiscourseSchema.call(data)
       if result.success?
         new(data)

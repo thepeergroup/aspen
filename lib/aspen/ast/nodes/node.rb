@@ -7,9 +7,7 @@ module Aspen
 
         def initialize(content: , label: nil)
           @content = Aspen::AST::Nodes::Content.new(content)
-          if label
-            @label = Aspen::AST::Nodes::Label.new(label)
-          end
+          @label = Aspen::AST::Nodes::Label.new(label)
         end
 
       end

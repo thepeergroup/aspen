@@ -1,28 +1,19 @@
 module Aspen
   class Edge
 
-    def initialize(word, context)
+    def initialize(word: , reciprocal: false)
       @word = word
-      @context = context
-    end
-
-    def text
-      @word.match(Aspen::Statement::EDGE).captures.first
-    end
-
-    def reciprocal?
-      @context.reciprocal? text
-    rescue Aspen::DiscourseError
-      false
+      @reciprocal = reciprocal
     end
 
     def to_cypher
-      str = "[:#{text.parameterize.underscore.upcase}]"
-      if reciprocal?
-        "-#{str}-"
-      else
-        "-#{str}->"
-      end
+      "-[:#{@word.parameterize.underscore.upcase}]-#{cap}"
+    end
+
+    private
+
+    def cap
+      @reciprocal ? "" : ">"
     end
   end
 

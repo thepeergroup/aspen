@@ -1,4 +1,6 @@
-default PollingPlace, voters
+default:
+  label: PollingPlace
+  attribute: voters
 ----
 
 (PollingPlace, 100) [outmarketed] (PollingPlace, 10)

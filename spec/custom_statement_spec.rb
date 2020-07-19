@@ -23,7 +23,7 @@ describe Aspen::CustomStatement do
   }
 
   let(:discourse) {
-    _discourse = Aspen::Discourse.new("default Person, name")
+    _discourse = Aspen::Discourse.from_yaml("default:\n  label: Person")
     _discourse.add_grammar(grammar)
     _discourse
   }

@@ -32,7 +32,6 @@ describe Aspen::Discourse do
       it "#default_attr_name" do
         some_labels.each do |label|
           expect(discourse.default_attr_name(label)).to eq("name")
-          expect(discourse.default_attr_name(label)).to eq("name")
         end
       end
 

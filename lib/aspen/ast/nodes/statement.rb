@@ -3,12 +3,12 @@ module Aspen
     module Nodes
       class Statement
 
-        attr_reader :statements
+        attr_reader :origin, :edge, :destination
 
         def initialize(origin: nil, edge: nil, dest: nil)
-          @origin = origin
-          @edge   = edge
-          @dest   = dest
+          @origin      = origin
+          @edge        = edge
+          @destination = dest
         end
 
       end

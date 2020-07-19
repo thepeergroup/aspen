@@ -1,30 +1,40 @@
-default Person, name
-default_attribute Organization, name
+default:
+  label: Person
+  attribute: name
+  attributes:
+    Organization: name
 
-match
-  (Person a) is (Person b)'s (string r).
-to
-  {{{a}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{b}}}
-end
+-
+  match:
+    - (Person a) knows (Person b).
+  template: {{{a}}}-[:KNOWS]->{{{b}}}.
 
-match
-  (Person p) works at (Organization org).
-to
-  {{{p}}}-[:WORKS_FOR]->{{{org}}}
-end
+grammar:
+  -
 
-match
-  (Person p) is a (string r) at (Organization org).
-  (Person p) is the (string r) of (Organization org).
-to
-  {{{p}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{org}}}
-end
+    match:
+      - (Person a) is (Person b)'s (string r).
+    template: |
+      {{{a}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{b}}}
 
-match
-  (Person p) and (Person q) are best friends.
-to
-  {{{p}}}-[:IS_FRIENDS_WITH { desc: "best" }]-{{{q}}}
-end
+  -
+    match:
+      - (Person p) works at (Organization org).
+    template: |
+      {{{p}}}-[:WORKS_FOR]->{{{org}}}
+
+  -
+    match:
+      - (Person p) is a (string r) at (Organization org).
+      - (Person p) is the (string r) of (Organization org).
+    template: |
+      {{{p}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{org}}}
+
+  -
+    match:
+      - (Person p) and (Person q) are best friends.
+    template: |
+      {{{p}}}-[:IS_FRIENDS_WITH { desc: "best" }]-{{{q}}}
 ----
 
 Jonathan is Jack Donaghy's "personal assistant".

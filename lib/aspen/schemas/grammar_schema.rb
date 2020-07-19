@@ -14,8 +14,7 @@ module Aspen
   module Schemas
 
     GrammarSchema = Dry::Schema.Params do
-      # There's an issue with dry/schema when we turn this on.
-      # config.validate_keys = true
+      config.validate_keys = true
 
       required(:match).array(:str?)
       required(:template).filled(:string)

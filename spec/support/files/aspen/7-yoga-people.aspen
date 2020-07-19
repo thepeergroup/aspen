@@ -1,8 +1,10 @@
-default Person, name
-default_attribute Employer, company_name
-default_attribute Studio, company_name
-
-reciprocal knows, is friends with
+default:
+  label: Person
+  attribute: name
+  attributes:
+    Employer: company_name
+    Studio:   company_name
+reciprocal: knows, is friends with
 
 ----
 

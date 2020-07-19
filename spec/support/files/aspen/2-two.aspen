@@ -1,3 +1,5 @@
-default Person, first_name
+default:
+  label: Person
+  attribute: first_name
 ----
 (Liz) [knows] (Pete Hornberger).

@@ -1,11 +1,15 @@
 require 'aspen'
 
+# I'm not sure Statement makes sense to test like this. What does it do?
+
 describe Aspen::Statement do
 
   let(:text) { "(Matt) [knows] (Brianna)." }
-  let (:context) { Aspen::Discourse.new("default Person, name") }
+  let (:discourse) { 
+    Aspen::Discourse.from_yaml("default:\n  label: Person")
+  }
 
-  let (:statement) { Aspen::Statement.from_text(text, context: context) }
+  let (:statement) { Aspen::Statement.from_text(text, discourse: discourse) }
 
 
   it "constructs valid statements with nodes" do
@@ -23,7 +27,7 @@ describe Aspen::Statement do
 
 
   let (:concert) {
-    Aspen::Statement.from_text("(Marty McFly) [played] (Johnny B. Goode).", context: context)
+    Aspen::Statement.from_text("(Marty McFly) [played] (Johnny B. Goode).", discourse: discourse)
   }
 
   it "lets non-ending periods pass through" do

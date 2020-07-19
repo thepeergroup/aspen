@@ -1,5 +1,7 @@
-default Person, name
-reciprocal knows
+default:
+  label: Person
+  attribute: name
+reciprocal: knows
 ----
 
 (Person { name: "Liz", age: 36 }) [knows] (Jack)

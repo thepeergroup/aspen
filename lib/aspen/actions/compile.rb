@@ -10,9 +10,9 @@ module Aspen
       def initialize(path, options = {})
         @path = path
         @basename = File.basename(@path, ".aspen")
-        dir      = File.dirname(@path)
+        dir       = File.dirname(@path)
         @dest     = File.expand_path("#{@basename}.cql", dir)
-        @options = options
+        @options  = options
       end
 
       def call

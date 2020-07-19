@@ -1,5 +1,5 @@
-MERGE (person_liz:Person { name: "Liz" })
-MERGE (person_jack:Person { name: "Jack" })
+MERGE (entity_liz:Entity { name: "Liz" })
+MERGE (entity_jack:Entity { name: "Jack" })
 
-MERGE (person_liz)-[:KNOWS]->(person_jack)
+MERGE (entity_liz)-[:KNOWS]->(entity_jack)
 ;

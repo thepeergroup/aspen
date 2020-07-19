@@ -2,6 +2,10 @@ require 'aspen'
 
 describe Aspen::Parser do
 
+  # Partial parses shouldn't really be allowed...
+  # and just setting up partial parses for the sake of testing
+  # feels...silly. Can we just call the specific parse method on
+  # the content?
   context "node" do
     context "with short form" do
       let(:code) { "(Liz M. Lemon)" }
@@ -34,13 +38,16 @@ describe Aspen::Parser do
 
     context "simple relationship" do
       let(:code) { "(Liz) [knows] (Jack)." }
-      let(:ast) { }
+      let(:ast) { described_class.parse_code(code) }
       pending "parses" do
-        expect(described_class.parse_code(code)).to eq(ast)
+        expect(ast.statements.count).to eq(1)
+        expect(ast.statements.first.origin.content.content).to eq("Liz")
+        expect(ast.statements.first.origin.label.content.content).to be_nil
       end
     end
 
-    context "lists" do
+    # TODO: Change "pending" to "context" to start doing list statements.
+    pending "lists" do
 
       # Will need to look ahead to end of line after bracket.
       context "with same label" do

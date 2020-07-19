@@ -280,7 +280,7 @@ The `default_attribute` directive will assign any nodes with the given label to 
 
 The whole code all together is:
 
-```
+```aspen
 # Discourse
 default Person, name
 default_attribute Employer, company_name

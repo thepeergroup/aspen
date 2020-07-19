@@ -57,7 +57,6 @@ module Aspen
       while result = parse_statement
         results << result
         break if tokens[position].nil?
-        sleep 1
       end
 
       results
@@ -88,20 +87,26 @@ module Aspen
 
     def parse_node_short_form
       puts ".... #parse_node_short_form"
-      if (_, content, _ = expect(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS))
-        Aspen::AST::Nodes::Node.new(content: content.last, label: nil)
-      end
+      # Terminal instructions require a "need"
+      _, content, _ = need(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS)
+      Aspen::AST::Nodes::Node.new(content: content.last, label: nil)
     end
 
     def parse_node_grouped_form
-      puts ".... #parse_node_short_form"
-      if (_, label, _, content, _ = expect(:OPEN_PARENS, :CONTENT, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
+      puts ".... #parse_node_grouped_form"
+      if (_, label, sep, content, _ = expect(:OPEN_PARENS, :CONTENT, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
+        puts "content: #{content.last}, label: #{label.last}, sep: #{sep.last}"
         Aspen::AST::Nodes::Node.new(content: content.last, label: label.last)
       end
     end
 
+    # This complicates things greatly. Can we skip this for now,
+    # by rewriting the tests to get rid of this case, and come back to it?
     def parse_node_cypher_form
-      raise NotImplementedError, "#parse_node_cypher_form not yet implemented"
+      puts ".... #parse_node_cypher_form"
+      if (_, label, _, content, _ = expect(:OPEN_PARENS, :CONTENT, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
+        Aspen::AST::Nodes::Node.new(content: content.last, label: label.last)
+      end
     end
 
     def parse_literal
@@ -129,9 +134,14 @@ module Aspen
 
     def expect(*expected_tokens)
       upcoming = tokens[position, expected_tokens.size]
+      puts "expected: #{expected_tokens}"
+      puts "--- VS ---"
+      puts "upcoming: #{upcoming}\n\n"
 
       if upcoming.map(&:first) == expected_tokens
         advance_by expected_tokens.size
+        puts "did advance by #{expected_tokens.size}"
+        puts "upcoming again, about to return: #{upcoming}\n\n"
         upcoming
       end
     end

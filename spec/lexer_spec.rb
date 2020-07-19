@@ -32,10 +32,10 @@ describe Aspen::Lexer do
       end
 
       context "with cypher form" do
-        let(:codes) { [
+        let(:codes) {[
           '(Person { name: "Liz M. Lemon", age: 36 })',
           '(:Person { name: "Liz M. Lemon", age: 36 })',
-        }
+        ]}
         let(:tokens) { [
           [:OPEN_PARENS],
           [:LABEL, "Person"],

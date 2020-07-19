@@ -23,13 +23,35 @@ require 'aspen/contracts'
 
 module Aspen
 
-  def self.compile_code(code, environment = {})
+  SEPARATOR = "----".freeze
+
+  def self.compile_code(code, environment = {}, debug: false)
     tokens = Lexer.tokenize(code)
+    if debug
+      puts "--- TOKENS ---"
+      puts tokens.inspect
+    end
     ast = Parser.parse(tokens)
+    if debug
+      puts "--- AST ---"
+      puts ast.inspect
+    end
     Compiler.render(ast, environment)
   end
 
-  def self.compile_text(text)
+  def self.compile_text(text, debug: false)
+    assert_text(text)
+
+    if text.include?(SEPARATOR)
+      env, _sep, code = text.partition(SEPARATOR)
+      compile_code(code, YAML.load(env), debug: debug)
+    else
+      code = text
+      compile_code(code, {}, debug: debug)
+    end
+  end
+
+  def self.old_compile_text(text)
     if text.strip.empty?
       raise Aspen::Error, "Text must be provided to the `Aspen.compile_text` method."
     end
@@ -40,6 +62,14 @@ module Aspen
     body    = Body.new(body_text, context: context)
 
     body.to_cypher
+  end
+
+  private
+
+  def self.assert_text(text)
+    if text.strip.empty?
+      raise Aspen::Error, "Text must be provided to the `Aspen.compile_text` method."
+    end
   end
 
 end
