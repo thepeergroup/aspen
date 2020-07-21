@@ -26,7 +26,7 @@ module Aspen
     def visit(node)
       short_name = node.class.to_s.split('::').last.downcase
       method_name = "visit_#{short_name}"
-      puts "---- #{method_name}"
+      # puts "---- #{method_name}"
       # puts node.inspect
       send(method_name, node)
     end
@@ -62,19 +62,17 @@ module Aspen
     end
 
     def visit_node(node)
-      puts node.inspect
       # Get the label, falling back to the default label.
       label = visit(node.label)
-      # puts "---> label: #{label.inspect}"
 
       # Get the attribute name, falling back to the default attribute name.
       attribute_name  = Maybe(nil).value_or(discourse.default_attr_name(label))
-      attribute_value = visit(node.content)
-      nickname = attribute_value.downcase
+      typed_attribute_value = visit(node.attribute)
+      nickname = typed_attribute_value.to_s.downcase
 
       Aspen::Node.new(
         label: label,
-        attributes: { attribute_name => attribute_value }
+        attributes: { attribute_name => typed_attribute_value }
       )
     end
 
@@ -90,7 +88,18 @@ module Aspen
       Maybe(content).value_or(discourse.default_label)
     end
 
+    def visit_attribute(node)
+      content = visit(node.content)
+      type    = visit(node.type)
+      content.send(type.converter)
+    end
+
+    def visit_type(node)
+      node
+    end
+
     def visit_content(node)
+      # puts "\t\t#{node.inspect}"
       node.content
     end
   end

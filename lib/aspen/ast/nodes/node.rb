@@ -3,11 +3,11 @@ module Aspen
     module Nodes
       class Node
 
-        attr_reader :content, :label
+        attr_reader :attribute, :label
 
-        def initialize(content: , label: nil)
-          @content = Aspen::AST::Nodes::Content.new(content)
-          @label = Aspen::AST::Nodes::Label.new(label)
+        def initialize(attribute: , label: nil)
+          @attribute = Aspen::AST::Nodes::Attribute.new(attribute)
+          @label     = Aspen::AST::Nodes::Label.new(label)
         end
 
       end

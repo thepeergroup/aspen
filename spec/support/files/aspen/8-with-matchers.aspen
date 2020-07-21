@@ -3,12 +3,6 @@ default:
   attribute: name
   attributes:
     Organization: name
-
--
-  match:
-    - (Person a) knows (Person b).
-  template: {{{a}}}-[:KNOWS]->{{{b}}}.
-
 grammar:
   -
 

@@ -19,19 +19,12 @@ module Aspen
 
 =end
 
-    def debug_puts(thing)
-      if ENV.fetch("DEBUG") { false }
-        puts thing
-      end
-    end
-
     def self.parse(tokens)
       new(tokens).parse
     end
 
     def self.parse_code(code)
       tokens = Aspen::Lexer.tokenize(code)
-      puts tokens.inspect
       parse(tokens)
     end
 
@@ -50,7 +43,7 @@ module Aspen
     alias_method :parse_narrative, :parse
 
     def parse_statements
-      puts ".... #parse_statements"
+      # puts "----> #parse_statements"
       results = []
 
       # Make sure this returns on empty
@@ -63,12 +56,12 @@ module Aspen
     end
 
     def parse_statement
-      puts ".... #parse_statement"
+      # puts "----> #parse_statement"
       parse_vanilla_statement || parse_list_statement || parse_custom_statement
     end
 
     def parse_vanilla_statement
-      puts ".... #parse_vanilla_statement"
+      # puts "----> #parse_vanilla_statement"
       origin = parse_node
       edge   = parse_edge
       dest   = parse_node
@@ -80,30 +73,35 @@ module Aspen
     end
 
     def parse_node
-      puts ".... #parse_node"
+      # puts "----> #parse_node"
       # parse_node_cypher_form ||
       parse_node_grouped_form || parse_node_short_form
     end
 
     def parse_node_short_form
-      puts ".... #parse_node_short_form"
+      # puts "----> #parse_node_short_form"
       # Terminal instructions require a "need"
       _, content, _ = need(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS)
-      Aspen::AST::Nodes::Node.new(content: content.last, label: nil)
+      Aspen::AST::Nodes::Node.new(
+        attribute: content.last,
+        label: nil
+      )
     end
 
     def parse_node_grouped_form
-      puts ".... #parse_node_grouped_form"
+      # puts "----> #parse_node_grouped_form"
       if (_, label, sep, content, _ = expect(:OPEN_PARENS, :CONTENT, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
-        puts "content: #{content.last}, label: #{label.last}, sep: #{sep.last}"
-        Aspen::AST::Nodes::Node.new(content: content.last, label: label.last)
+        Aspen::AST::Nodes::Node.new(
+          attribute: content.last,
+          label: label.last
+        )
       end
     end
 
     # This complicates things greatly. Can we skip this for now,
     # by rewriting the tests to get rid of this case, and come back to it?
     def parse_node_cypher_form
-      puts ".... #parse_node_cypher_form"
+      # puts "----> #parse_node_cypher_form"
       if (_, label, _, content, _ = expect(:OPEN_PARENS, :CONTENT, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
         Aspen::AST::Nodes::Node.new(content: content.last, label: label.last)
       end
@@ -114,7 +112,7 @@ module Aspen
     end
 
     def parse_edge
-      puts ".... #parse_edge"
+      # puts "----> #parse_edge"
       if (_, content, _ = expect(:OPEN_BRACKETS, :CONTENT, :CLOSE_BRACKETS))
         Aspen::AST::Nodes::Edge.new(content.last)
       end
@@ -134,14 +132,9 @@ module Aspen
 
     def expect(*expected_tokens)
       upcoming = tokens[position, expected_tokens.size]
-      puts "expected: #{expected_tokens}"
-      puts "--- VS ---"
-      puts "upcoming: #{upcoming}\n\n"
 
       if upcoming.map(&:first) == expected_tokens
         advance_by expected_tokens.size
-        puts "did advance by #{expected_tokens.size}"
-        puts "upcoming again, about to return: #{upcoming}\n\n"
         upcoming
       end
     end

@@ -5,6 +5,8 @@ module Aspen
   end
 end
 
+require 'aspen/ast/nodes/attribute'
+require 'aspen/ast/nodes/type'
 require 'aspen/ast/nodes/content'
 require 'aspen/ast/nodes/edge'
 require 'aspen/ast/nodes/label'

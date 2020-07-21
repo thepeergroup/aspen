@@ -6,26 +6,80 @@ describe Aspen do
     expect { Aspen.compile_text(" ") }.to raise_error(Aspen::Error)
   end
 
-  let(:aspen_paths) { Dir["spec/support/files/aspen/*.aspen"].sort }
-  let(:cypher_paths) { Dir["spec/support/files/cypher/*.cql"].sort }
-  let(:test_paths) { aspen_paths.zip(cypher_paths) }
-  let(:test_files) {
-    test_paths.map do |paths|
-      paths.map { |path| File.read(path) }
-    end
-  }
+  context "code" do
 
-  it "renders Aspen files" do
-    @ct = 0
-    test_files.each do |aspen, cypher|
-      @ct += 1
-      next if @ct == 4
-      puts "Starting file ##{@ct}"
-      expect(Aspen.compile_text(aspen, debug: true)).to eql(cypher)
+    let (:aspen) do
+      File.read "spec/support/files/aspen/#{filename}.aspen"
+    end
+
+    let (:cypher) do
+      File.read "spec/support/files/cypher/#{filename}.cql"
+    end
+
+    context 'without discourse' do
+      let(:filename) { '1-simple' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
+    end
+
+    context 'with discourse' do
+      let(:filename) { '2-two' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
+    end
+
+    context 'with a discourse with :attributes, :reciprocal' do
+      let(:filename) { '3-slightly-complex' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
+    end
+
+    context 'with Cypher form' do
+      let(:filename) { '4-full-form' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
+    end
+
+    context 'with implicitly typed attributes' do
+      let(:filename) { '5-impl-typed-attrs' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
+    end
+
+    context 'with implicitly typed attributes, DA form' do
+      let(:filename) { '6-impl-typed-da' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
+    end
+
+    context 'with a small network' do
+      let(:filename) { '7-small-network' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
+    end
+
+    context 'with complex matchers' do
+      let(:filename) { '8-with-matchers' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
     end
   end
 
-  it "renders Aspen with non-annotated text" do
+  pending "minimal Aspen (just a node) compiles" do
+    fail "Statements are presently required to be origin, edge, target"
+    expect(Aspen.compile_text("(Liz)")).to eql("MERGE (entity_liz:Entity { name: \"Liz\" })")
+  end
+
+  pending "renders Aspen with non-annotated text" do
+    fail
     aspen = "On this day, (Matt) was [interviewed by] (Mia), and it went well."
     cypher = <<~CYPHER
       MERGE (person_matt:Entity { name: "Matt" })
@@ -51,6 +105,7 @@ describe Aspen do
   }
 
   pending "raises when attributes collide" do
+    fail "This depends on Cypher form passing."
     expect {
       Aspen.compile_text(attribute_collision)
     }.to raise_error(Aspen::AttributeCollisionError)
