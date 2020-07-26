@@ -19,19 +19,21 @@ module Aspen
 
 =end
 
-    def self.parse(tokens)
-      new(tokens).parse
+    def self.parse(tokens, env={})
+      new(tokens, env={}).parse
     end
 
-    def self.parse_code(code)
-      tokens = Aspen::Lexer.tokenize(code)
-      parse(tokens)
+    # Convenience method
+    def self.parse_code(code, env={})
+      tokens = Aspen::Lexer.tokenize(code, env={})
+      parse(tokens, env={})
     end
 
     attr_reader :tokens, :position
 
-    def initialize(tokens)
+    def initialize(tokens, env={})
       @tokens = tokens
+      # Nothing is done with environment in the parser.
       # Calling #next will start at 0
       @position = 0
     end
@@ -57,11 +59,30 @@ module Aspen
 
     def parse_statement
       # puts "----> #parse_statement"
-      parse_vanilla_statement || parse_list_statement || parse_custom_statement
+      parse_comment ||
+      parse_custom_statement ||
+      parse_vanilla_statement ||
+      parse_list_statement
+    end
+
+    def parse_comment
+      if comment = expect(:COMMENT)
+        puts comment.first.last
+        Aspen::AST::Nodes::Comment.new(comment.first.last)
+      end
+    end
+
+    def parse_custom_statement
+      if content = expect(:CUSTOM_GRAMMAR_STATEMENT)
+        # FIXME: Why does this need a #first and a #last?
+        # Seems unnecessarily nested. Maybe this happened in the lexer.
+        Aspen::AST::Nodes::CustomStatement.new(content.first.last)
+      end
     end
 
     def parse_vanilla_statement
       # puts "----> #parse_vanilla_statement"
+      # TODO: Might benefit from a condition when doing non-vanilla statements?
       origin = parse_node
       edge   = parse_edge
       dest   = parse_node
@@ -89,8 +110,8 @@ module Aspen
     end
 
     def parse_node_grouped_form
-      # puts "----> #parse_node_grouped_form"
-      if (_, label, sep, content, _ = expect(:OPEN_PARENS, :CONTENT, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
+      # puts "----> #parse_node_grouped_form with #{[peek] + peek(4)}"
+      if (_, label, sep, content, _ = expect(:OPEN_PARENS, :LABEL, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
         Aspen::AST::Nodes::Node.new(
           attribute: content.last,
           label: label.last

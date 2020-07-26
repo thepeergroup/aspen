@@ -13,6 +13,7 @@ require 'aspen/body'
 require 'aspen/node'
 require 'aspen/edge'
 
+require 'aspen/abstract_statement'
 require 'aspen/statement'
 require 'aspen/custom_statement'
 require 'aspen/matcher'
@@ -34,8 +35,8 @@ module Aspen
   end
 
   def self.compile_code(code, environment = {})
-    tokens = Lexer.tokenize(code)
-    ast = Parser.parse(tokens)
+    tokens = Lexer.tokenize(code, environment)
+    ast = Parser.parse(tokens, environment)
     Compiler.render(ast, environment)
   end
 

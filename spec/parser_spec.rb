@@ -2,34 +2,37 @@ require 'aspen'
 
 describe Aspen::Parser do
 
-  # Partial parses shouldn't really be allowed...
-  # and just setting up partial parses for the sake of testing
-  # feels...silly. Can we just call the specific parse method on
-  # the content?
+  # We're doing full statements because partial parses, that is,
+  # just parsing an edge or a node, are functionally meaningless
+  # in relational databases. Full statements only.
+  # (Maybe node partial parses in the future, but, meh.)
   context "node" do
+
+    let(:node) { Aspen::AST::Nodes::Node }
+
     context "with short form" do
-      let(:code) { "(Liz M. Lemon)" }
-      let(:node) { Aspen::AST::Nodes::Node }
+      let(:code) { "(Liz M. Lemon) [knows] (Jack)" }
 
       it "parses" do
         res = described_class.parse_code(code)
-        expect(res.statements.first).to be_a(node)
+        expect(res.statements.first.origin).to be_a(node)
       end
     end
 
     context "with grouped form" do
-      let(:code) { "(Person, Liz M. Lemon)" }
+      let(:code) { "(Jack) [is the boss of] (Person, Liz M. Lemon)" }
       it "parses" do
         res = described_class.parse_code(code)
-        expect(res.statements.first).to be_a(node)
+        expect(res.statements.first.target).to be_a(node)
       end
     end
 
-    context "with cypher form" do
-      let(:code) { '(:Person { name: "Liz M. Lemon", age: 36 })' }
+    pending "with cypher form" do
+      fail "Not yet implemented"
+      let(:code) { '(:Person { name: "Liz M. Lemon", age: 36 }) [knows] (Jack)' }
       it "parses" do
         res = described_class.parse_code(code)
-        expect(res.statements.first).to be_a(node)
+        expect(res.statements.first.origin).to be_a(node)
       end
     end
   end # node
@@ -39,10 +42,12 @@ describe Aspen::Parser do
     context "simple relationship" do
       let(:code) { "(Liz) [knows] (Jack)." }
       let(:ast) { described_class.parse_code(code) }
-      pending "parses" do
+
+      it "parses" do
         expect(ast.statements.count).to eq(1)
-        expect(ast.statements.first.origin.content.content).to eq("Liz")
-        expect(ast.statements.first.origin.label.content.content).to be_nil
+        origin = ast.statements.first.origin
+        expect(origin.attribute.content.inner_content).to eq("Liz")
+        expect(origin.label.content.inner_content).to be_nil
       end
     end
 

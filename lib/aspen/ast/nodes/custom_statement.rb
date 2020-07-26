@@ -1,15 +1,13 @@
 module Aspen
   module AST
     module Nodes
-      class Content
+      class CustomStatement
 
         attr_reader :content
 
         def initialize(content)
-          @content = content
+          @content = Aspen::AST::Nodes::Content.new(content)
         end
-
-        alias_method :inner_content, :content
 
       end
     end

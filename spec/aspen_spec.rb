@@ -37,7 +37,11 @@ describe Aspen do
       end
     end
 
-    context 'with Cypher form' do
+    pending 'with Cypher form' do
+      fail """
+        Not yet implemented, thinking about skipping tokenizing Cypher
+        as little as possible.
+      """
       let(:filename) { '4-full-form' }
       it 'renders' do
         expect(Aspen.compile_text(aspen)).to eql(cypher)

@@ -9,20 +9,36 @@ module Aspen
     NUMBER_CAPTURE = /([\d,]+\.?\d+)/
 
     LABEL_PASCAL_CASE = /^:([A-Z][a-z0-9]+)+/
-    PASCAL_CASE = /^([A-Z][a-z0-9]+)+/
+    PASCAL_CASE       = /^([A-Z][a-zA-Z0-9]+)/
+    GROUPED_FORM      = /^([A-Z][a-zA-Z0-9]+)[,:] ([[[:alnum:]][[:blank:]]\"\'\.]+)\)/
 
-    def self.tokenize(code)
-      new.tokenize(code)
+    def self.tokenize(code, env={})
+      new.tokenize(code, env)
     end
 
-    def tokenize(code)
+    def tokenize(code, env={})
       scanner = StringScanner.new(code)
       tokens = []
+
+      environment = Discourse.assert(env)
+      grammar = environment.grammar
 
       until scanner.eos?
         # puts "states: #{stack}"
         # puts tokens.inspect
 
+        # Match custom grammars
+        if grammar && scanner.beginning_of_line?
+          line = scanner.scan(/^.*$/)
+          if grammar.match?(line)
+            tokens << [:CUSTOM_GRAMMAR_STATEMENT, line]
+            next
+          else
+            scanner.unscan # reset pointer to beginning of line
+          end
+        end
+
+        # Standard Aspen syntax
         case state
         when :default then
           if scanner.scan(/\(/)
@@ -34,18 +50,25 @@ module Aspen
           elsif scanner.scan(/(:\s*\n)/) # Colon, any whitespace, newline
             tokens << [:START_LIST, scanner.matched]
             push_state :list
-          elsif scanner.scan(/\.\s*$/)
+          elsif scanner.scan(/\./)
             tokens << [:END_STATEMENT, scanner.matched]
           elsif scanner.scan(/\s/)
             # NO OP
+          elsif scanner.scan(/#.*$/)
+            tokens << [:COMMENT, scanner.matched.gsub(/#\s*/, '')]
           else
             no_match(scanner, state)
           end
 
         when :node then
-          if scanner.scan(LABEL_PASCAL_CASE)
-            tokens << [:LABEL, scanner.matched]
-            push_state :hash
+          # Removed Cypher form for now. Uncomment the next 3 lines
+          # to start working on it.
+          #
+          # if scanner.scan(LABEL_PASCAL_CASE)
+          #   tokens << [:LABEL, scanner.matched]
+          #   push_state :hash
+          if scanner.match?(GROUPED_FORM)
+            push_state :node_grouped_form
           elsif scanner.scan(/\n/) && stack == [:list, :node]
             # If it's a list node and we encounter a newline,
             # pop :node so we can move back to the list.
@@ -60,6 +83,14 @@ module Aspen
           elsif scanner.scan(/\)/)
             tokens << [:CLOSE_PARENS]
             pop_state
+          else
+            no_match(scanner, state)
+          end
+
+        when :node_grouped_form
+          if scanner.scan(PASCAL_CASE)
+            tokens << [:LABEL, scanner.matched]
+            pop_state # Back to Node
           else
             no_match(scanner, state)
           end
@@ -114,7 +145,7 @@ module Aspen
           end
 
         else # No state match
-          raise Aspen::ParseError, "There is no matcher for state #{state.inspect}."
+          raise Aspen::LexError, "There is no matcher for state #{state.inspect}."
         end
       end
 
@@ -140,7 +171,7 @@ module Aspen
     private
 
     def no_match(scanner, state)
-      raise Aspen::ParseError,
+      raise Aspen::LexError,
               Aspen::Errors.messages(:unexpected_token, scanner, state)
     end
 

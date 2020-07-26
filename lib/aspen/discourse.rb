@@ -16,12 +16,23 @@ module Aspen
     end
 
     def self.from_hash(data = {})
-      raise ArgumentError, "Must be a hash, was a #{data.class}" unless data.is_a? Hash
+      raise ArgumentError, "Must be a hash, was a #{data.class}" unless data.is_a?(Hash)
       result = Schemas::DiscourseSchema.call(data)
       if result.success?
         new(data)
       else
         raise Aspen::Error, result.errors
+      end
+    end
+
+    def self.assert(data)
+      return nil if data.nil?
+      case data.class.to_s
+      when "Aspen::Discourse" then data
+      when "Hash"   then from_hash(data)
+      when "String" then from_yaml(data)
+      else
+        raise ArgumentError, "Must be a Hash, string (containing YAML), or Aspen::Discourse, got:\n\t#{data} (#{data.class})"
       end
     end
 

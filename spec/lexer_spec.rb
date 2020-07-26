@@ -3,7 +3,6 @@ require 'aspen'
 describe Aspen::Lexer do
 
   context "vanilla" do
-
     context "node" do
       context "with short form" do
         let(:code) { "(Liz M. Lemon)" }
@@ -31,7 +30,8 @@ describe Aspen::Lexer do
         end
       end
 
-      context "with cypher form" do
+      pending "with cypher form" do
+        fail "not yet implemented"
         let(:codes) {[
           '(Person { name: "Liz M. Lemon", age: 36 })',
           '(:Person { name: "Liz M. Lemon", age: 36 })',
@@ -59,7 +59,6 @@ describe Aspen::Lexer do
     end # node
 
     context "statements" do
-
       context "simple relationship" do
         let(:code) { "(Liz) [knows] (Jack)." }
         let(:tokens) { [
@@ -166,13 +165,77 @@ describe Aspen::Lexer do
             it "raises" do
               expect {
                 described_class.tokenize(code)
-              }.to raise_error(Aspen::ParseError)
+              }.to raise_error(Aspen::LexError)
             end
           end
         end
-
       end # lists
     end # statements
-
   end # vanilla
+
+  context "with grammars" do
+    let(:code) { "Jonathan is Jack Donaghy's \"personal assistant\"." }
+    let(:env) do
+      {
+        "grammar"=>[
+          {
+            "match"=>["(Person a) is (Person b)'s (string r)."],
+            "template"=>"{{{a}}}-[:WORKS_FOR { role: {{{r}}} }]->{{{b}}}\n"
+          }
+        ]
+      }
+    end
+    let (:tokens) {[
+      [:CUSTOM_GRAMMAR_STATEMENT, "Jonathan is Jack Donaghy's \"personal assistant\"."]
+      # When you start up: start by adding env={} to lexer,
+      # and then get the lexer to start matching custom grammars FIRST.
+      # Memoize grammar lookup boolean if possible!
+    ]}
+
+    it "tokenizes" do
+      expect(described_class.tokenize(code, env)).to eq(tokens)
+    end
+  end # grammars
+
+  context "comments" do
+    context "full line" do
+      let(:code) { "# This is a comment in Aspen." }
+      let(:tokens) { [[:COMMENT, "This is a comment in Aspen."]] }
+      it "lexes" do
+        expect(described_class.tokenize(code)).to eq(tokens)
+      end
+    end
+
+    context "inline" do
+      let(:tokens) { [
+          [:OPEN_PARENS],
+          [:CONTENT, "Liz"],
+          [:CLOSE_PARENS],
+          [:OPEN_BRACKETS],
+          [:CONTENT, "knows"],
+          [:CLOSE_BRACKETS],
+          [:OPEN_PARENS],
+          [:CONTENT, "Jack"],
+          [:CLOSE_PARENS],
+          [:END_STATEMENT, "."],
+          [:COMMENT, "This is a comment at the end."],
+        ] }
+
+      context "with spaces" do
+        let(:code) { "(Liz) [knows] (Jack). # This is a comment at the end." }
+        it "lexes" do
+          expect(described_class.tokenize(code)).to eq(tokens)
+        end
+      end # spaces
+
+      context "with no spaces" do
+        let(:code) { "(Liz) [knows] (Jack).#This is a comment at the end." }
+        it "lexes" do
+          expect(described_class.tokenize(code)).to eq(tokens)
+        end
+      end # no spaces
+    end # inline
+
+  end
+
 end

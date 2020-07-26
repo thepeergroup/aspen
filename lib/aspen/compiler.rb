@@ -32,7 +32,13 @@ module Aspen
     end
 
     def visit_narrative(node)
-      statements    = node.statements.map { |statement| visit(statement) }
+      # Instead of letting comments be `nil` and using `#compact`
+      # to silently remove them, possibly hiding errors, we "compile"
+      # comments as `:comment` and filter them explicitly
+      statements    = node.statements.map do |statement|
+        # This will visit both regular and custom statements.
+        visit(statement)
+      end.reject { |elem| elem == :comment }
       nodes         = format_nodes(statements)
       relationships = format_relationships(statements)
       return [nodes, "\n\n",  relationships, "\n;\n"].join()
@@ -41,7 +47,7 @@ module Aspen
     def format_nodes(statements)
       statements.
         flat_map(&:nodes).
-        map { |n| "MERGE #{n.to_cypher}" }.
+        map { |node| "MERGE #{node.to_cypher}" }.
         uniq.
         join("\n")
     end
@@ -49,7 +55,7 @@ module Aspen
     def format_relationships(statements)
       statements.
         flat_map(&:to_cypher).
-        map { |n| "MERGE #{n}" }.
+        map { |statement_cypher| "MERGE #{statement_cypher}" }.
         join("\n")
     end
 
@@ -59,6 +65,11 @@ module Aspen
         edge: visit(node.edge),
         destination: visit(node.destination)
       )
+    end
+
+    def visit_customstatement(node)
+      puts node.inspect
+      CustomStatement.new(visit(node.content), discourse)
     end
 
     def visit_node(node)
@@ -101,6 +112,11 @@ module Aspen
     def visit_content(node)
       # puts "\t\t#{node.inspect}"
       node.content
+    end
+
+    def visit_comment(node)
+      # Signal to other methods to reject comments.
+      :comment
     end
   end
 end

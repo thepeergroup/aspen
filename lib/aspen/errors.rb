@@ -5,6 +5,7 @@ module Aspen
   class AttributeCollisionError < Error ; end
   class BodyError      < Error ; end
   class DiscourseError < Error ; end
+  class LexError       < Error ; end
   class LookupError    < Error ; end
   class MatchError     < Error ; end
   class ParseError     < Error ; end
@@ -22,11 +23,8 @@ module Aspen
       {
         unexpected_token: -> (args) {
           <<~ERROR
-            Within state #{args.last}
-            Unexpected token "#{args.first.matched}" at position #{args.first.charpos}
-
-            Next bit:
-              #{args.first.peek(30).inspect}
+            Within state :#{args.last}, unexpected token "#{args.first.peek(1)}" at position #{args.first.pos}.
+            Next 30 characters: #{args.first.peek(30).inspect}
           ERROR
         },
         default_already_registered: -> (args) {

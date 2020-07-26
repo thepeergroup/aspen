@@ -2,6 +2,11 @@ require 'aspen'
 
 describe Aspen::CustomStatement do
 
+  # It looks up the narrative in the grammar.
+  # It raises if it can't find one.
+  # It returns nodes.
+  # It renders a nicknamed Cypher statement from context.
+
   let(:first_match_statement) { "(Person a) gave (Person b) $(numeric amt)." }
   let(:matchers) {
     [

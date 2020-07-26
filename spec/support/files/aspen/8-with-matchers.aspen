@@ -5,7 +5,6 @@ default:
     Organization: name
 grammar:
   -
-
     match:
       - (Person a) is (Person b)'s (string r).
     template: |
@@ -30,7 +29,6 @@ grammar:
     template: |
       {{{p}}}-[:IS_FRIENDS_WITH { desc: "best" }]-{{{q}}}
 ----
-
 Jonathan is Jack Donaghy's "personal assistant".
 Jonathan works at NBC.
 Jack Donaghy is the "CEO" of NBC.

@@ -11,6 +11,8 @@ module Aspen
           @destination = dest
         end
 
+        alias_method :target, :destination
+
       end
     end
   end
