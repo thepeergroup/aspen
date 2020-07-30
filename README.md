@@ -6,18 +6,30 @@ To put it another way, Aspen transforms narrative text to Cypher, specifically f
 
 In short, Aspen transforms this:
 
-```cypher
-(Matt) [knows] (Brianna)
+```aspen
+(Liz) [knows] (Jack)
 ```
 
 into this:
 
 ```cypher
-MERGE (:Person { name: "Matt" })-[:KNOWS]->(:Person { name: "Brianna" })
+MERGE (:Entity { name: "Liz" })-[:KNOWS]->(:Entity { name: "Jack" })
 ```
 
-(It's only slightly more complicated than that.)
+and can push it to a database.
 
+Want Liz and Jack to be nodes with a `:Person` label? Just add a little config.
+
+```aspen
+default:
+  label: Person
+----
+(Liz) [knows] (Jack)
+```
+
+```aspen
+MERGE (:Person { name: "Liz" })-[:KNOWS]->(:Person { name: "Jack" })
+```
 
 ## Graphs4Good
 
@@ -104,9 +116,9 @@ Need a refresher? [See the Cypher manual.](https://neo4j.com/docs/cypher-manual/
 
 There are two important parts of any Aspen file: a __narrative__ and a __discourse__.
 
-A __narrative__ is a description of data that records facts, observations, and perceptions about relationships. For example, in an Aspen file, we'll describe a relationship between two people like this: `(Matt) [knows] (Brianna)`.
+A __narrative__ is a description of data that records facts, observations, and perceptions about relationships. For example, in an Aspen file, we'll describe a relationship between two people like this: `(Liz) [knows] (Jack)`.
 
-A __discourse__ is a way of speaking or writing about a subject. Aspen doesn't automatically know what `(Matt) [knows] (Brianna)` means, so we have to tell it. Because they're wrapped in parentheses, Aspen knows that Matt and Brianna will be nodes, but it doesn't know enough to generate Cypher just from this line.
+A __discourse__ is a way of speaking or writing about a subject. Aspen works out of the box by labeling every node an `Entity` and assuming the text inside the parentheses is the `name` of that entity. Aspen can't automatically know that `(Liz)` and `(Jack)` are people, so if we want it to know, we have to tell it using the discourse, that little block of YAML on top of an Aspen file.
 
 In an Aspen file, the discourse is written at the top, and the narrative is written at the bottom, __always__ split by a line of just four dashes: `----`.
 
@@ -116,12 +128,13 @@ Here's an example of an Aspen file, with discourse and narrative sections marked
 
 ```aspen
 # Discourse
-default Person, name
+default:
+  label: Person
 ----
 # Narrative
-(Matt) [knows] (Brianna).
-(Eliza) [knows] (Brianna).
-(Matt) [knows] (Eliza).
+(Liz) [knows] (Jack).
+(Eliza) [knows] (Jack).
+(Liz) [knows] (Eliza).
 ```
 
 If the concepts of discourse and narrative aren't fully clear right now, that's okay—keep going. The rest of the tutorial should shed light on them. Also, this README was written pretty quickly, and if you have suggestions, please [contribute](https://github.com/beechnut/aspen/issues/1)—your feedback will be well-received and appreciated!
@@ -132,57 +145,58 @@ If the concepts of discourse and narrative aren't fully clear right now, that's 
 
 The simplest case for using Aspen is a simple relationship between two people.
 
-> Matt knows Brianna.
+> Liz knows Jack.
 
 Aspen doesn't know which of these are nodes and which are edges, so we have to tell it by adding parentheses `()` to indicate nodes and square brackets `[]` to indicate edges. This should look familiar—these conventions are intentionally the same as Cypher.
 
 ```aspen
-(Matt) [knows] (Brianna).
+(Liz) [knows] (Jack).
 ```
 
 Now that that's out of the way, let's think about what we can conclude from this statement:
 
-- The strings of text `"Matt"` and `"Brianna"` are names.
-- Matt and Brianna are people, so they should have a `:Person` label in Cypher.
-- If Matt knows Brianna, Brianna knows Matt as well, so the relationship "knows" is reciprocal.
+- The strings of text `"Liz"` and `"Jack"` are names.
+- Liz and Jack are people, so they should have a `:Person` label in Cypher.
+- If Liz knows Jack, Jack knows Liz as well, so the relationship "knows" is reciprocal.
 
 However, Aspen doesn't know any of this automatically!
 
 So, we need to tell Aspen:
 
-- What attribute to assign the text `"Matt"` and `"Brianna"`
+- What attribute to assign the text `"Liz"` and `"Jack"`
 - What kind of labels to apply to the nodes
 - That the relationship "knows" is a reciprocal (or "two-way", or "undirected") relationship
 
 ##### Default label and attribute name
 
-First, we need to tell Aspen that, when it encounters a simple or "short form" node like `(Matt)`, that it should assume it's a person, and that the text in parentheses is the name of the person.
+First, we need to tell Aspen that, when it encounters a simple or "short form" node like `(Liz)`, that it should assume it's a person, and that the text in parentheses is the name of the person.
 
 To do this, let's add a `default` line to the discourse section of the file, up at the top. This directs Aspen to assign unlabeled nodes a `:Person` label, and that the text should be assigned to the Person's `name` attribute.
 
 ```aspen
- # Discourse
-default Person, name
+# Discourse
+default:
+  label: Person
 ----
 # Narrative
-(Matt) [knows] (Brianna).
+(Liz) [knows] (Jack).
 ```
 
 When we run this, we get this Cypher:
 
 ```cypher
-MERGE (person_matt:Person { name: "Matt" })
-MERGE (person_brianna:Person { name: "Brianna" })
+MERGE (person_liz:Person { name: "Liz" })
+MERGE (person_jack:Person { name: "Jack" })
 
-MERGE (person_matt)-[:KNOWS]->(person_brianna)
+MERGE (person_liz)-[:KNOWS]->(person_jack)
 ;
 ```
 
 ##### Making relationships reciprocal
 
-Take a look at the arrow—it's pointing from Matt to Brianna, suggesting that Matt knows Brianna but Brianna doesn't know Matt.
+Take a look at the arrow—it's pointing from Liz to Jack, suggesting that Liz knows Jack but Jack doesn't know Liz.
 
-However, we want the relationship "knows" to be reciprocal, because if Matt knows Brianna, we can assume that Brianna knows Matt.
+However, we want the relationship "knows" to be reciprocal, because if Liz knows Jack, we can assume that Jack knows Liz.
 
 > A note on reciprocal relationships:
 >
@@ -190,21 +204,22 @@ However, we want the relationship "knows" to be reciprocal, because if Matt know
 >
 > However, we want our resulting Cypher to show a reciprocal relationship so we can read the Cypher and understand the intent of the code.
 
-If we wanted to show that we intend to create a reciprocal relationship, we'd write Cypher for "Matt knows Brianna" as follows. Notice that there's no arrowhead—the relationship is "undirected".
+If we wanted to show that we intend to create a reciprocal relationship, we'd write Cypher for "Liz knows Jack" as follows. Notice that there's no arrowhead—the relationship is "undirected".
 
 ```cypher
-MERGE (person_matt)-[:KNOWS]-(person_brianna)
+MERGE (person_liz)-[:KNOWS]-(person_jack)
 ```
 
 To get this reciprocality in Aspen, we list all the reciprocal relationships after the keyword `reciprocal`:
 
 ```aspen
 # Discourse
-default Person, name
-reciprocal knows
+default:
+  label: Person
+reciprocal: knows
 ----
 # Narrative
-(Matt) [knows] (Brianna).
+(Liz) [knows] (Jack).
 ```
 
 This gives us the undirected relationship in Cypher that we want!
@@ -220,92 +235,78 @@ This would ensure that `[:KNOWS]`, `[:IS_FRIENDS_WITH]`, and `[:IS_MARRIED_TO]` 
 
 ##### How to write nodes
 
-There are three ways to write nodes.
+There are currently two ways to write nodes. (We intend to support inline Cypher sytnax in the future.)
 
-- `(Matt)` - short form: requires a `default` line in the discourse
-- `(Person, Matt)` - default attribute form: requires a `default_attribute` line in the discourse
-- `(Person { name: "Matt" })` - full form or Cypher form: self-contained, requires nothing in the discourse
+- Short form: `(Liz)`
+- Grouped form: `(Person, Liz)`
 
-> At present, the discourse still complains if nothing is set. [Help fix this issue.](https://github.com/beechnut/aspen/issues/4)
-
-If you need a node with multiple attributes, you can write:
+<!-- If you need a node with multiple attributes, you can write:
 
 ```cypher
-(Person { name: 'Matt', state: 'MA', age: 31 })
+(Person { name: 'Liz', state: 'MA', age: 31 })
 ```
 
 Notice how there's no preceding `:` in front of `Person` in Aspen, but there is in Cypher.
+ -->
+But let's review how to handle when you have another node type (aka label) in your data, and you want to keep it short, using "grouped form".
 
-But let's review how to handle when you have another node type (aka label) in your data, and you want to keep it short, using "default attribute form".
-
-Let's say we want to represent an Employer, and the employer's name is UMass Boston.
+Let's say we want to represent an Employer, and the employer's name is Kabletown.
 
 ```aspen
-default Person, name
+default:
+  label: Person
 ----
 ...
-(Matt) [works at] (Employer, UMass Boston)
+(Liz) [works at] (Employer, Kabletown)
 ```
 
-Note how this node starts with a label, followed by a comma, followed by content to be assigned to an attribute. In order to tell Aspen to assign the text "UMass Boston" to an attribute called `company_name`, we add a `default_attribute` statement to the discourse section.
+__NOTE__: You can use either a comma or a colon to separate the label from the attribute in grouped form. So you could write the Employer node as `(Employer: Kabletown)`.
 
-```
+In order to tell Aspen to assign the text "Kabletown" to an attribute called `company_name`, we add a little to the discourse section.
+
+```aspen
 # Discourse
-default Person, name
-default_attribute Employer, company_name
+default
+  label: Person
+  attributes:
+    Employer: company_name
 ----
 # Narrative
-(Matt) [works at] (Employer, UMass Boston)
+(Liz) [works at] (Employer, Kabletown)
 ```
 
 The `default_attribute` line tells Aspen that when we encounter a node in default-attribute form, that it should assign the content for a node beginning  with `Employer` to `company_name`.
-
-Let's go over the differences between `default` and `default_attribute`.
-
-The `default` directive will catch any unlabeled nodes, like `(Matt)`, and label them. It will then assign the text inside the parentheses, `"Matt"`, to the attribute given as the default. If the default is `Person, name`, it will create a Person node with name "Matt".
-
-If we had a node like `(UMass Boston)`, it would result in the creation of a Person node with a name "UMass Boston":
-
-```cypher
-/* This is not what we wanted. */
-(:Person { name: "UMass Boston" })
-```
-
-The `default_attribute` directive will assign any nodes with the given label to the given attribute. So Aspen like `(Employer, ACME Corp.)` will create a node like
-
-```cypher
-(:Employer { name: "ACME Corp." })
-```
-
 
 The whole code all together is:
 
 ```aspen
 # Discourse
-default Person, name
-default_attribute Employer, company_name
-reciprocal knows
+default:
+  label: Person
+  attributes:
+    Employer: company_name
+reciprocal: knows
 ----
 # Narrative
-(Matt) [knows] (Brianna).
-(Matt) [works at] (Employer, UMass Boston).
+(Liz) [knows] (Jack).
+(Liz) [works at] (Employer, Kabletown).
 ```
 
 The Cypher produced generates the reciprocal "knows" relationship, and the one-way employment relationship.
 
 ```cypher
-MERGE (person_matt:Person { name: "Matt" })
-MERGE (person_brianna:Person { name: "Brianna" })
-MERGE (employer_umass_boston:Employer { company_name: "UMass Boston" })
+MERGE (person_liz:Person { name: "Liz" })
+MERGE (person_jack:Person { name: "Jack" })
+MERGE (employer_kabletown:Employer { company_name: "Kabletown" })
 
-MERGE (person_matt)-[:KNOWS]-(person_brianna)
-MERGE (person_matt)-[:WORKS_AT]->(employer_umass_boston)
+MERGE (person_liz)-[:KNOWS]-(person_jack)
+MERGE (person_liz)-[:WORKS_AT]->(employer_kabletown)
 ;
 ```
 
 > A note about attribute types:
 >
-> One known issue is that `default` and `default_attribute` auto-type the attributes they're given, and try to make them either a string or number. So, if you pass a Massachusetts zip code like `02111` into a node in either short form or default attribute form, it will become integer `2111`.
+> One known issue is that attributes will auto-type based on the values they're given, and try to make them either a number or text. So, if you write a Massachusetts zip code like `01543` into a node in either short form or grouped form, it will become the integer `2111`.
 >
 > As a Massachusetts resident, I vowed never to let this happen in my software, so I intend to address this soon.
 >
@@ -321,12 +322,14 @@ Let's say you have a data model that tracks donations to local political candida
 
 To write this in vanilla Aspen, you'd write:
 
-```
-default Person, name
-default_atttibute Donation, amount
+```aspen
+default:
+  label: Person
+  attributes:
+    Donation: amount
 ----
-(Matt) [gave donation] (Donation, 20.00).
-(Hélène) [received donation] (Donation, 20.00).
+(Chuck) [gave donation] (Donation, 20.00).
+(Alexandria) [received donation] (Donation, 20.00).
 ```
 
 You may already be seeing some issues with this, like:
@@ -339,20 +342,19 @@ To solve all of these issues, we can define custom grammars.
 
 __Custom grammars__ define sentences and assign them to Cypher statements. Once we define a custom grammar, we can write a simple sentence—with no parentheses or brackets!—and it will populate a Cypher statement.
 
-Let's say we want to be able to write "Matt donated $20 to Hélène.", and have it map to a Cypher statement.
+Let's say we want to be able to write "Chuck donated $20 to Alexandria.", and have it map to a Cypher statement.
 
-```
+```aspen
 # Discourse
-default_attribute Person, name
-
-match
-  Matt donated $20 to Hélène.
-to
-  (:Person { name: "Matt" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person { name: "Hélène" })
-end
+grammar:
+  -
+    match:
+      - Chuck donated $20 to Alexandria.
+    template: |
+      (:Person { name: "Chuck" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person { name: "Alexandria" })
 ----
 # Narrative
-Matt donated $20 to Hélène.
+Chuck donated $20 to Alexandria.
 ```
 
 #### Adding matchers for nodes
@@ -361,52 +363,46 @@ The above grammar gives us the *exact* statement we want, but next we want to ge
 
 First, let's replace the donor and recipient. These will both be `Person`s, so we'll write:
 
-```
-default Person, name
-
-match
-  (Person a) donated $20 to (Person b).
-to
-  {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-{{{b}}}
-end
+```aspen
+grammar:
+  -
+    match:
+      - (Person a) donated $20 to (Person b).
+    template: |
+      {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-{{{b}}}
 ----
-Matt donated $20 to Hélène.
-Sarah donated $30 to Sumbul.
+Chuck donated $20 to Alexandria.
+Sarah donated $20 to Alexandria.
 ```
 
-We've changed two things here. (We still have to do the dollar amount. That will be the following step.)
+We've changed two things here. (We still have to do the dollar amount. This code only handles $20 donations. We'll cover that in the following section.)
 
-First, we replaced the literal names of "Matt" and "Hélène" with __matchers__ that will take the text of a sentence and assign it to variables `a` and `b`.
+First, we replaced the literal names of "Chuck" and "Alexandria" with __matchers__ that will take the text of a sentence and assign it to variables `a` and `b`.
 
 Second, we use the variables `a` and `b` in the template. To do this, we removed the Cypher and the parentheses, and surrounded each variable with triple curly braces `{{{}}}`, to indicate that they are
 
 > The templates—in the `to` section—use a templating language called Mustache. If you've ever used Mustache, you've probably used double braces like `{{variable}}`. We need triple braces in Aspen because Mustache escapes characters to be HTML-safe, which is a problem because Cypher needs those characters. If you accidentally use double-braces, you'll see nodes like:
 >
-> `(:Person, { name: &quot;Matt&quot; })`
+> `(:Person, { name: &quot;Chuck&quot; })`
 >
 > Not ideal! So, triple braces it is.
 
-When we feed this custom grammar with the sentence "Matt donated $20 to Hélène.", the data behind the scenes looks sort of like this:
+When we feed this custom grammar with the sentence "Chuck donated $20 to Alexandria.", the data behind the scenes looks sort of like this:
 
 ```ruby
 {
-  "a" => (:Person, { name: "Matt" }),
-  "b" => (:Person, { name: "Hélène" }),
+  "a" => (:Person, { name: "Chuck" }),
+  "b" => (:Person, { name: "Alexandria" }),
 }
 ```
 
-> How does it know the text should be the `name` attribute? It's because we told Aspen the default attribute for Person is `name`. But, if you wanted to specify different attributes, you could write a Person node in default attribute form or full form, like:
->
-> `(Person, Matt) donated $20 to (Person { name: "Matt", age: 31 }).`
->
-> Your choice!
-
 When we take this template
 
-```cypher
-...
-to
-  {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-{{{b}}}
+```yaml
+  ...
+
+  template:
+    {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-{{{b}}}
 ```
 
 and populate it with the above data, we get the Cypher we're aiming for:
@@ -414,21 +410,19 @@ and populate it with the above data, we get the Cypher we're aiming for:
 ```cypher
 /* Simplified slightly for demonstration purposes */
 
-(:Person { name: "Matt" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person { name: "Hélène" })
+(:Person { name: "Chuck" })-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(:Person { name: "Alexandria" })
 ```
 
 #### Adding matchers for other information
 
-We still have to set the amount of the donation as a variable. If we left it as is, every donation would be $20 forever!
-```
-...
+We still have to set the amount of the donation as a variable. If we left it as is, every donation would be $20!
 
-match
-  (Person a) donated $(numeric dollar_amount) to (Person b).
-to
-  {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
-end
-...
+```yaml
+grammar:
+  match:
+    - (Person a) donated $(numeric dollar_amount) to (Person b).
+  template:
+    {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
 ```
 
 Okay, so we've added the matcher `(numeric dollar_amount)`, and used the variable in the template.
@@ -437,7 +431,7 @@ Okay, so we've added the matcher `(numeric dollar_amount)`, and used the variabl
 
 Aspen accepts three different types of matchers: numeric, string, and nodes. We've already seen nodes.
 
-__Node matchers__  we've already used, and they come in the form of `(Label variable_name)`. If you type any word starting with an uppercase letter, that's the label that will be applied. Node matchers capture nodes in all three forms, so write them however you'd like—full form, default-attribute form, or short form!
+__Node matchers__  we've already used, and they come in the form of `(Label variable_name)`. If you type any word starting with an uppercase letter, that's the label that will be applied. <!-- Node matchers capture nodes in multiple forms, including grouped form, so use whichever you like! -->
 
 __Numeric matchers__ will match typical (US) formats of numbers, including:
 
@@ -447,18 +441,20 @@ __Numeric matchers__ will match typical (US) formats of numbers, including:
 
 For convenience, any numeric type (even if it has commas!) will be converted to numbers. Whole numbers will be converted to integers, and anything with a decimal point will be converted to floats.
 
+You can specify __integer__ (whole numbers) or __float__ (decimals) instead of numeric, but it will force you to use a whol enumber or a decimal in the narrative, respectively. The __numeric__ type will accept all numbers.
+
 __String matchers__ will match anything in double-quotes. (Please don't use single quotes, as Aspen doesn't support them yet. [Help fix this issue.](https://github.com/beechnut/aspen/issues/6))
 
-At the moment, if you have a string matcher like
+At the moment, if you have a string matcher like:
 
 ```
-Matt works as a (string job_position) at UMass Boston.
+Chuck works as a (string job_position) at Kabletown.
 ```
 
-then make sure to write the value for `job_position` in quotes, like
+then make sure to write the value for `job_position` in quotes in the narrative, like
 
 ```
-Matt works as a "research assistant" at UMass Boston.
+Chuck works as a "research assistant" at Kabletown.
 ```
 
 If you don't, it won't match!
@@ -472,57 +468,60 @@ Let's see the whole file and add some more lines that this grammar can match, as
 Statements that match custom grammars don't need brackets and parentheses, but vanilla Aspen—Aspen that won't match custom grammars—always do.
 
 ```
-default Person, name
-reciprocal knows
+default:
+  label: Person
+reciprocal: knows
 
-match
-  (Person a) donated $(numeric dollar_amount) to (Person b).
-  (Person a) gave (Person b) $(numeric dollar_amount).
-  (Person a) gave a $(numeric dollar_amount) donation to (Person b).
-to
-  {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
+grammar:
+  -
+    match:
+      - (Person a) donated $(numeric dollar_amount) to (Person b).
+      - (Person a) gave (Person b) $(numeric dollar_amount).
+      - (Person a) gave a $(numeric dollar_amount) donation to (Person b).
+    template:
+      {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
 end
 ----
 
-Matt donated $20 to Hélène.
-Sarah donated $30 to Sumbul.
-(Matt) [voted for] (Sumbul).
-(Sarah) [knows] (Hélène).
-(Matt) [knows] (Sarah).
+Chuck donated $20 to Alexandria.
+Sarah donated $30 to Joe.
+(Chuck) [voted for] (Joe).
+(Sarah) [knows] (Alexandria).
+(Chuck) [knows] (Sarah).
 
-Becky gave Mayor Joe $20.
+Becky gave Sumbul $20.
 Yael gave a $20 donation to Sam.
-(Becky) [volunteered for] (Mayor Joe).
+(Becky) [volunteered for] (Sumbul).
 (Yael) [knows] (Becky).
 (Becky) [knows] (Sam).
-(Becky) [knows] (Matt).
+(Becky) [knows] (Chuck).
 ```
 
-> We didn't show this, but you can also have more than one `match..to..end` block to add more grammars. They'll try to match in the order in which they are defined in the file.)
+> We didn't show this, but you can also have more than one custom grammar match & template block, to add more to your custom grammar. They'll try to match in the order in which they are defined in the file.)
 
 This will produce a wealth of Cypher. We're leaving it here in full so you can compare it to the Aspen.
 
 ```
-MERGE (person_matt:Person { name: "Matt" })
-MERGE (person_helene:Person { name: "Hélène" })
+MERGE (person_chuck:Person { name: "Chuck" })
+MERGE (person_alexandria:Person { name: "Alexandria" })
 MERGE (person_sarah:Person { name: "Sarah" })
-MERGE (person_sumbul:Person { name: "Sumbul" })
+MERGE (person_joe:Person { name: "Joe" })
 MERGE (person_becky:Person { name: "Becky" })
-MERGE (person_mayor_joe:Person { name: "Mayor Joe" })
+MERGE (person_sumbul:Person { name: "Sumbul" })
 MERGE (person_yael:Person { name: "Yael" })
 MERGE (person_sam:Person { name: "Sam" })
 
-MERGE (person_matt)-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(person_helene)
-MERGE (person_sarah)-[:GAVE_DONATION]->(:Donation { amount: 30 })<-[:RECEIVED_DONATION]-(person_sumbul)
-MERGE (person_matt)-[:VOTED_FOR]->(person_sumbul)
-MERGE (person_sarah)-[:KNOWS]-(person_helene)
-MERGE (person_matt)-[:KNOWS]-(person_sarah)
-MERGE (person_becky)-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(person_mayor_joe)
+MERGE (person_chuck)-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(person_alexandria)
+MERGE (person_sarah)-[:GAVE_DONATION]->(:Donation { amount: 30 })<-[:RECEIVED_DONATION]-(person_joe)
+MERGE (person_chuck)-[:VOTED_FOR]->(person_joe)
+MERGE (person_sarah)-[:KNOWS]-(person_alexandria)
+MERGE (person_chuck)-[:KNOWS]-(person_sarah)
+MERGE (person_becky)-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(person_sumbul)
 MERGE (person_yael)-[:GAVE_DONATION]->(:Donation { amount: 20 })<-[:RECEIVED_DONATION]-(person_sam)
-MERGE (person_becky)-[:VOLUNTEERED_FOR]->(person_mayor_joe)
+MERGE (person_becky)-[:VOLUNTEERED_FOR]->(person_sumbul)
 MERGE (person_yael)-[:KNOWS]-(person_becky)
 MERGE (person_becky)-[:KNOWS]-(person_sam)
-MERGE (person_becky)-[:KNOWS]-(person_matt)
+MERGE (person_becky)-[:KNOWS]-(person_chuck)
 ;
 ```
 
@@ -533,7 +532,7 @@ That's the end of the tutorial for now! Do you have more questions? Is something
 
 ### Problem Statement
 
-@beechnut, the lead developer of Aspen, attempted to model a simple conflict scenario in Neo4j's language Cypher, but found it took significantly longer than expected. He ran into numerous errors because it wasn't obvious how to construct nodes and edges through simple statements.
+Matt (@beechnut), the lead developer of Aspen, attempted to model a simple conflict scenario in Neo4j's language Cypher, but found it took significantly longer than expected. He ran into numerous errors because it wasn't obvious how to construct nodes and edges through simple statements.
 
 It is a given that writing Cypher directly is time-consuming and error-prone, especially for beginners. This is not a criticism of Cypher—we love Cypher and think it's extremely-well designed. Aspen is just attempting to make it easier to generate data by hand.
 
@@ -547,7 +546,7 @@ We believe that graph databases and graph algorithms can provide deep insights i
 
 - Aspen Notebook - live connection between Aspen and a playground Neo4j instance, so you can type Aspen on the left and see the visual graph on the right
 - Schema and attribute protections - so a typo doesn't mess up your data model
-- Short nicknames & attribute uniqueness - so you can avoid accidental data duplication when "Matt" and "Matt Cloyd" are the same person
+- Short nicknames & attribute uniqueness - so you can avoid accidental data duplication when "Liz" and "Liz Lemon" are the same person
 - Custom attribute handling functions - if your default nodes could either be a first name or a full name, switch between attributes
 - Aspen Notebook publishing - publish data to a development/test/production Neo4j instance (and perhaps view diffs)
 - Two-way conversion between Neo4j data and Aspen
