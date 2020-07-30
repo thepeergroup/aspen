@@ -8,8 +8,8 @@ module Aspen
 
     NUMBER_CAPTURE = /([\d,]+\.?\d+)/
 
-    LABEL_PASCAL_CASE = /^:([A-Z][a-z0-9]+)+/
     PASCAL_CASE       = /^([A-Z][a-zA-Z0-9]+)/
+    LABEL_PASCAL_CASE = /^(:[A-Z][a-zA-Z0-9]+)/
     GROUPED_FORM      = /^([A-Z][a-zA-Z0-9]+)[,:] ([[[:alnum:]][[:blank:]]\"\'\.]+)\)/
 
     def self.tokenize(code, env={})
@@ -26,6 +26,7 @@ module Aspen
       until scanner.eos?
         # puts "states: #{stack}"
         # puts tokens.inspect
+        # puts "grammar: #{grammar.inspect}"
 
         # Match custom grammars
         if grammar && scanner.beginning_of_line?

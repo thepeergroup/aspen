@@ -1,5 +1,5 @@
 module Aspen
-  class Parser
+  class Parser < AbstractParser
 
 =begin
 
@@ -19,25 +19,6 @@ module Aspen
 
 =end
 
-    def self.parse(tokens, env={})
-      new(tokens, env={}).parse
-    end
-
-    # Convenience method
-    def self.parse_code(code, env={})
-      tokens = Aspen::Lexer.tokenize(code, env={})
-      parse(tokens, env={})
-    end
-
-    attr_reader :tokens, :position
-
-    def initialize(tokens, env={})
-      @tokens = tokens
-      # Nothing is done with environment in the parser.
-      # Calling #next will start at 0
-      @position = 0
-    end
-
     def parse
       Aspen::AST::Nodes::Narrative.new(parse_statements)
     end
@@ -45,7 +26,6 @@ module Aspen
     alias_method :parse_narrative, :parse
 
     def parse_statements
-      # puts "----> #parse_statements"
       results = []
 
       # Make sure this returns on empty
@@ -58,7 +38,6 @@ module Aspen
     end
 
     def parse_statement
-      # puts "----> #parse_statement"
       parse_comment ||
       parse_custom_statement ||
       parse_vanilla_statement ||
@@ -67,7 +46,6 @@ module Aspen
 
     def parse_comment
       if comment = expect(:COMMENT)
-        puts comment.first.last
         Aspen::AST::Nodes::Comment.new(comment.first.last)
       end
     end
@@ -81,7 +59,6 @@ module Aspen
     end
 
     def parse_vanilla_statement
-      # puts "----> #parse_vanilla_statement"
       # TODO: Might benefit from a condition when doing non-vanilla statements?
       origin = parse_node
       edge   = parse_edge
@@ -94,13 +71,11 @@ module Aspen
     end
 
     def parse_node
-      # puts "----> #parse_node"
       # parse_node_cypher_form ||
       parse_node_grouped_form || parse_node_short_form
     end
 
     def parse_node_short_form
-      # puts "----> #parse_node_short_form"
       # Terminal instructions require a "need"
       _, content, _ = need(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS)
       Aspen::AST::Nodes::Node.new(
@@ -110,7 +85,6 @@ module Aspen
     end
 
     def parse_node_grouped_form
-      # puts "----> #parse_node_grouped_form with #{[peek] + peek(4)}"
       if (_, label, sep, content, _ = expect(:OPEN_PARENS, :LABEL, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
         Aspen::AST::Nodes::Node.new(
           attribute: content.last,
@@ -122,7 +96,6 @@ module Aspen
     # This complicates things greatly. Can we skip this for now,
     # by rewriting the tests to get rid of this case, and come back to it?
     def parse_node_cypher_form
-      # puts "----> #parse_node_cypher_form"
       if (_, label, _, content, _ = expect(:OPEN_PARENS, :CONTENT, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
         Aspen::AST::Nodes::Node.new(content: content.last, label: label.last)
       end
@@ -133,7 +106,6 @@ module Aspen
     end
 
     def parse_edge
-      # puts "----> #parse_edge"
       if (_, content, _ = expect(:OPEN_BRACKETS, :CONTENT, :CLOSE_BRACKETS))
         Aspen::AST::Nodes::Edge.new(content.last)
       end
@@ -151,55 +123,5 @@ module Aspen
       raise NotImplementedError, "#parse_node_labeled_form not yet implemented"
     end
 
-    def expect(*expected_tokens)
-      upcoming = tokens[position, expected_tokens.size]
-
-      if upcoming.map(&:first) == expected_tokens
-        advance_by expected_tokens.size
-        upcoming
-      end
-    end
-
-    def need(*required_tokens)
-      upcoming = tokens[position, required_tokens.size]
-      expect(*required_tokens) or raise Aspen::ParseError, <<~ERROR
-        Unexpected tokens. Expected #{required_tokens.inspect} but got #{upcoming.inspect}
-      ERROR
-    end
-
-    def first
-      tokens.first
-    end
-
-    def last
-      tokens.last
-    end
-
-    def next_token
-      t = tokens[position]
-      advance
-      return t
-    end
-
-    def peek(offset = 0)
-      if offset > 0
-        tokens[position + 1..position + offset]
-      else
-        tokens[position]
-      end
-    end
-
-    private
-
-    def advance
-      advance_by 1
-    end
-
-    def advance_by(offset = 1)
-      @position += offset
-    end
-
   end
 end
-
-

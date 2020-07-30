@@ -12,21 +12,15 @@ module Aspen
 
     include Dry::Monads[:maybe]
 
-    def initialize(content, env={})
-      @content  = content
-      @env      = env
-      # SMELL: We're duplicating a grammar lookup here.
-      @matcher  = @env.grammar.matcher_for(content).value!
-      @results  = @env.grammar.results_for(content)
-      @template = @matcher.template
+    attr_reader :nodes
+
+    def initialize(nodes: , cypher: )
+      @nodes  = nodes
+      @cypher = cypher
     end
 
-    # def nodes
-      # TODO
-    # end
-
-    # def to_cypher
-    #   Mustache.render(template, nicknamed_results)
-    # end
+    def to_cypher
+      @cypher
+    end
   end
 end

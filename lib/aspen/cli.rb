@@ -91,28 +91,28 @@ module Aspen
       #   end
       # end
 
-      class New < Dry::CLI::Command
-        desc "Generate files for a new Aspen project"
+      # class New < Dry::CLI::Command
+      #   desc "Generate files for a new Aspen project"
 
-        argument :name,
-          desc: "Name for new Aspen project folder",
-          required: true
+      #   argument :name,
+      #     desc: "Name for new Aspen project folder",
+      #     required: true
 
-        def call(name: )
-          Dry::CLI::Utils::Files.mkdir(name)
-          # This should be re-added only when discourses
-          # can be written as a special discourse file.
-          # Dry::CLI::Utils::Files.mkdir("#{name}/discourses")
-          Dry::CLI::Utils::Files.mkdir("#{name}/narratives")
-          Dry::CLI::Utils::Files.touch("#{name}/narratives/#{name}.aspen")
+      #   def call(name: )
+      #     Dry::CLI::Utils::Files.mkdir(name)
+      #     # This should be re-added only when discourses
+      #     # can be written as a special discourse file.
+      #     # Dry::CLI::Utils::Files.mkdir("#{name}/discourses")
+      #     Dry::CLI::Utils::Files.mkdir("#{name}/narratives")
+      #     Dry::CLI::Utils::Files.touch("#{name}/narratives/#{name}.aspen")
 
-          # In a project, Aspen might be built into a set of Cypher files
-          # or perhaps a single master Cypher file.
-          Dry::CLI::Utils::Files.mkdir("#{name}/build")
+      #     # In a project, Aspen might be built into a set of Cypher files
+      #     # or perhaps a single master Cypher file.
+      #     Dry::CLI::Utils::Files.mkdir("#{name}/build")
 
-          puts "Generated new project '#{name}'"
-        end
-      end
+      #     puts "Generated new project '#{name}'"
+      #   end
+      # end
 
       # module Generate
       #   class Discourse < Dry::CLI::Command

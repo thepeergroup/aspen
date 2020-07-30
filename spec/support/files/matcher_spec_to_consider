@@ -1,6 +1,6 @@
 require 'aspen'
 
-describe Aspen::Matcher do
+describe Aspen::CustomGrammar::Matcher do
 
   # let(:context) { Aspen::Discourse.new("default Person, name") }
 
@@ -11,7 +11,7 @@ describe Aspen::Matcher do
     let(:aspen) { "I have 1,000 apples." }
 
     it "renders a type-based pattern" do
-      matcher = Aspen::Matcher.new(statement, template)
+      matcher = described_class.new(statement, template)
       pattern = /^I have (?-mix:(?<apple_count>[\d,]+\.?\d+)) apples\.?$/
 
       expect(matcher.pattern).to eq(pattern)
@@ -29,7 +29,7 @@ describe Aspen::Matcher do
     context "without commas" do
       let(:aspen)  { "I have 10 apples." }
       let(:subject) {
-        Aspen::Matcher.new(numeric_statement, numeric_cypher_template)
+        described_class.new(numeric_statement, numeric_cypher_template)
       }
 
       it "returns matches" do
@@ -40,7 +40,7 @@ describe Aspen::Matcher do
     context "with commas" do
       let(:aspen)  { "I have 1,000 apples." }
       let(:subject) {
-        Aspen::Matcher.new(numeric_statement, numeric_cypher_template)
+        described_class.new(numeric_statement, numeric_cypher_template)
       }
 
       it "handles commas gracefully" do
@@ -56,7 +56,7 @@ describe Aspen::Matcher do
     let(:aspen)  { "I have a dog named \"Fido\"." }
 
     let(:subject) {
-      Aspen::Matcher.new(string_map, string_cypher_template)
+      described_class.new(string_map, string_cypher_template)
     }
 
     it "returns matches" do
@@ -71,7 +71,7 @@ describe Aspen::Matcher do
     let(:aspen) { "Matt gave Hélène $2,000." }
 
     let(:subject) {
-      Aspen::Matcher.new(mixed_map, mixed_cypher_template)
+      described_class.new(mixed_map, mixed_cypher_template)
     }
 
     it "returns matches" do

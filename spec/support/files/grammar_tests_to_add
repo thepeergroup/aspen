@@ -1,6 +1,6 @@
 require 'aspen'
 
-describe Aspen::Grammar do
+describe Aspen::CustomGrammar do
 
   let(:context) { Aspen::Discourse.new("default Person, name") }
 
@@ -12,11 +12,11 @@ describe Aspen::Grammar do
     let(:first_match_statement) { "(Person a) gave (Person b) $(numeric amt)." }
     let(:matchers) {
       [
-        Aspen::Matcher.new(
+        Aspen::CustomGrammar::Matcher.new(
           "(Person a) gave (Person b) $(numeric amt).",
           "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
         ),
-        Aspen::Matcher.new(
+        Aspen::CustomGrammar::Matcher.new(
           "(Person a) donated $(numeric amt) to (Person b).",
           "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
         )
@@ -24,7 +24,7 @@ describe Aspen::Grammar do
     }
 
     let(:grammar) {
-      grammar = Aspen::Grammar.new()
+      grammar = described_class.new()
       grammar.add(matchers)
       grammar
     }

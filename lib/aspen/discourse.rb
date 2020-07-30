@@ -38,7 +38,7 @@ module Aspen
 
     def initialize(data = {})
       @data = data.with_indifferent_access
-      @grammar = Grammar.new
+      @grammar = Aspen::CustomGrammar::Grammar.new
       process_grammar
     end
 
@@ -89,12 +89,17 @@ module Aspen
       maybe_whitelist.value_or("").split(",").map(&:strip)
     end
 
+    # Converts multiple lines
     def process_grammar
       return false unless configured_grammar
       configured_grammar.each do |block|
-        Array(block.fetch(:match)).each do |matcher|
-          matcher_object = Matcher.new(matcher, block.fetch(:template))
-          grammar.add(matcher_object)
+        Array(block.fetch(:match)).each do |expression|
+          matcher = Aspen::CustomGrammar::Matcher.new(
+            expression: expression,
+            template:   block.fetch(:template),
+            pattern:    Aspen::CustomGrammar.compile_pattern(expression)
+          )
+          grammar.add(matcher)
         end
       end
     end

@@ -109,6 +109,18 @@ module Aspen
           ERROR
         },
 
+        no_grammar_match: -> (args) {
+          <<~ERROR
+            Expected pattern:
+
+              #{pattern}
+
+            to match
+
+              #{str}
+          ERROR
+        },
+
         no_statement_tag: -> (args) {
           <<~ERROR
             Couldn't figure out how to tag '#{args.first}'."

@@ -158,7 +158,7 @@ describe Aspen::Discourse do
 
       context "with a one-line matcher" do
         it "builds a matcher" do
-          expect(discourse.grammar).to be_an Aspen::Grammar
+          expect(discourse.grammar).to be_a Aspen::CustomGrammar::Grammar
           expect(discourse.grammar.count).to eq 1
           expect(discourse.grammar.match?(line)).to be true
         end

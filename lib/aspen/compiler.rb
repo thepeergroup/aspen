@@ -26,8 +26,6 @@ module Aspen
     def visit(node)
       short_name = node.class.to_s.split('::').last.downcase
       method_name = "visit_#{short_name}"
-      # puts "---- #{method_name}"
-      # puts node.inspect
       send(method_name, node)
     end
 
@@ -67,9 +65,61 @@ module Aspen
       )
     end
 
+    # TODO: When you pick up, get the labels back into here.
+    #   Labelreg? typereg[:labels]?
+    # TODO: There's obviously some objects that want to be
+    #   created here, no?
     def visit_customstatement(node)
-      puts node.inspect
-      CustomStatement.new(visit(node.content), discourse)
+      statement = visit(node.content)
+      matcher   = discourse.grammar.matcher_for(statement)
+      results   = matcher.captures(statement)
+      template  = matcher.template
+      typereg   = matcher.typereg
+      labelreg  = matcher.labelreg
+
+      nodes = []
+
+      typed_results = results.inject({}) do |hash, elem|
+        key, value = elem
+        typed_value = case typereg[key]
+        when :integer then value.to_i
+        when :float   then value.to_f
+        when :numeric then
+          value.match?(/\./) ? value.to_f : value.to_i
+        when :string  then value
+        when :node    then
+          # FIXME: This only handles short form and not grouped form.
+          #   I think we were allowing grouped and Cypher form to fill
+          #   in custom statement templates.
+          # TODO: Add some object to nodes array.
+          node = visit(
+            Aspen::AST::Nodes::Node.new(
+              attribute: value,
+              label: labelreg[key]
+            )
+          )
+          nodes << node
+          node
+        end
+        hash[key] = typed_value
+        hash
+      end
+
+      formatted_results = typed_results.inject({}) do |hash, elem|
+        key, value = elem
+        formatted_value = if value.is_a?(Aspen::Node)
+          value.nickname_node
+        else
+          value
+        end
+        hash[key] = formatted_value
+        hash
+      end
+
+      CustomStatement.new(
+        nodes: nodes,
+        cypher: Mustache.render(template.strip, formatted_results)
+      )
     end
 
     def visit_node(node)
@@ -110,7 +160,6 @@ module Aspen
     end
 
     def visit_content(node)
-      # puts "\t\t#{node.inspect}"
       node.content
     end
 

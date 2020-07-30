@@ -10,11 +10,11 @@ describe Aspen::CustomStatement do
   let(:first_match_statement) { "(Person a) gave (Person b) $(numeric amt)." }
   let(:matchers) {
     [
-      Aspen::Matcher.new(
+      Aspen::CustomGrammar::Matcher.new(
         first_match_statement,
         "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
       ),
-      Aspen::Matcher.new(
+      Aspen::CustomGrammar::Matcher.new(
         "(Person a) donated $(numeric amt) to (Person b).",
         "{{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{amt}} })<-[:RECEIVED_DONATION]-{{{b}}}"
       )
@@ -22,7 +22,7 @@ describe Aspen::CustomStatement do
   }
 
   let(:grammar) {
-    grammar = Aspen::Grammar.new()
+    grammar = Aspen::CustomGrammar::Grammar.new()
     grammar.add(matchers)
     grammar
   }
@@ -33,12 +33,11 @@ describe Aspen::CustomStatement do
     _discourse
   }
 
-  let(:line) { "Matt gave Hélène $2,000." }
-
   let(:custom_statement) { Aspen::CustomStatement.from_text(line, context: discourse) }
 
-
   context "valid line" do
+
+    let(:line) { "Matt gave Hélène $2,000." }
 
     context "with nodes in simple form" do
 
