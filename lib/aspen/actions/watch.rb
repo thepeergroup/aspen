@@ -6,32 +6,34 @@ module Aspen
 
       def initialize(path: , options: {})
         @path     = path
-        @logger   = options.fetch(:logger)   { Logger.new(STDOUT) }
+        @logger   = options.fetch(:logger)   { Logger.new(STDOUT, level: :warn) }
         @database = options.fetch(:database) { false }
         @drop     = options.fetch(:drop)     { false }
+
+        Listen.logger = @logger
       end
 
       def call
-        Listen.logger = @logger
+        puts "Using debug level #{@logger.level}"
+        puts "Listening for changes at path: #{@path.inspect} ..."
+        puts "Publishing to database at #{@database}..." if @database
+        puts drop_mode_message if @drop
         listener = Listen.to(@path, only: /\.aspen$/) do |mod, add, _rem|
-          files_to_compile = [mod, add].flatten
-          files_to_compile.each do |path|
-            @logger.info "----> Compiling #{path} ..."
-            Aspen::CLI::Commands::Compile.new.call(path: path, database: @database, drop: @drop)
-            @logger.info "compiled!"
+          begin
+            files_to_compile = [mod, add].flatten
+            files_to_compile.each do |path|
+              Aspen::CLI::Commands::Compile.new.call(path: path, database: @database, drop: @drop)
+            end
+          rescue Aspen::Error => e
+            puts e.message
           end
         end
         listener.start
-        puts "Listening to #{@path}..."
-        puts "Publishing to database at #{@database}..." if @database
-        puts drop_mode_message if @drop
         sleep
-      rescue Aspen::Error => e
-        puts e.message
-        listener.start
       rescue Interrupt => e
+        # FIXME: The logger calls don't ever seem to work.
         @logger.info "Exiting..."
-        puts "Exiting..."
+        puts "\nExiting..."
         listener.stop
         raise SystemExit
       end

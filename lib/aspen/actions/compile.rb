@@ -22,12 +22,9 @@ module Aspen
 
       private
 
-      def cypher
-        @cypher ||= Aspen.compile_text(File.read(@path))
-      end
-
       def compile_to_file
-        File.open(@dest, 'w') { |file| file << cypher }
+        @cypher ||= Aspen.compile_text(File.read(@path))
+        File.open(@dest, 'w') { |file| file << @cypher }
         puts "Compiled #{@basename}.aspen to #{@basename}.cql."
       end
 
@@ -52,7 +49,7 @@ module Aspen
 
       def db_push
         print "About to push data to database..."
-        db.query(cypher)
+        db.query(@cypher)
         print "OK\n"
       end
 

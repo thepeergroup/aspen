@@ -45,8 +45,8 @@ module Aspen
 
           argument :path,
             type:     :string,
-            required: true,
-            desc:     "Folder or file to watch for changes"
+            desc:     "Folder or file to watch for changes",
+            default:  "."
 
           option :database,
             type:    :string,
