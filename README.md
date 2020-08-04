@@ -133,8 +133,8 @@ default:
 ----
 # Narrative
 (Liz) [knows] (Jack).
-(Eliza) [knows] (Jack).
-(Liz) [knows] (Eliza).
+(Jenna) [knows] (Jack).
+(Liz) [knows] (Jenna).
 ```
 
 If the concepts of discourse and narrative aren't fully clear right now, that's okay—keep going. The rest of the tutorial should shed light on them. Also, this README was written pretty quickly, and if you have suggestions, please [contribute](https://github.com/beechnut/aspen/issues/1)—your feedback will be well-received and appreciated!
@@ -480,7 +480,6 @@ grammar:
       - (Person a) gave a $(numeric dollar_amount) donation to (Person b).
     template:
       {{{a}}}-[:GAVE_DONATION]->(:Donation { amount: {{{dollar_amount}}} })<-[:RECEIVED_DONATION]-{{{b}}}
-end
 ----
 
 Chuck donated $20 to Alexandria.
