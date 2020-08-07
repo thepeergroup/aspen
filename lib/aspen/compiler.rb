@@ -86,9 +86,9 @@ module Aspen
         when :float   then value.to_f
         when :numeric then
           value.match?(/\./) ? value.to_f : value.to_i
-        when :string  then value
+        when :string  then "\"#{value}\""
         when :node    then
-          # FIXME: This only handles short form and not grouped form.
+          # FIXME: This only handles short form.
           #   I think we were allowing grouped and Cypher form to fill
           #   in custom statement templates.
           # TODO: Add some object to nodes array.

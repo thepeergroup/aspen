@@ -29,8 +29,8 @@ grammar:
     template: |
       {{{p}}}-[:IS_FRIENDS_WITH { desc: "best" }]-{{{q}}}
 ----
-Jonathan is Jack Donaghy's "personal assistant".
+Jonathan is Jack Donaghy's personal assistant.
 Jonathan works at NBC.
-Jack Donaghy is the "CEO" of NBC.
-Liz Lemon is a "TV Producer" at NBC.
+Jack Donaghy is the CEO of NBC.
+Liz Lemon is a TV Producer at NBC.
 Liz Lemon and Jack Donaghy are best friends.

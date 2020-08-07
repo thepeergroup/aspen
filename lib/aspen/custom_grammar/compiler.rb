@@ -55,7 +55,7 @@ module Aspen
         when :integer then /(?<#{node.var_name}>[\d,]+\d*)/    # No decimal
         when :float   then /(?<#{node.var_name}>[\d,]+\.\d+)/  # Decimal point required
         when :numeric then /(?<#{node.var_name}>[\d,]+\.?\d*)/ # Optional decimal
-        when :string  then /(?<#{node.var_name}>\".*?\")/
+        when :string  then /(?<#{node.var_name}>.*?)/
         when :node    then /(?<#{node.var_name}>.*?)/
         else
           raise ArgumentError, "No regexp pattern for type \"#{node.type}\"."
