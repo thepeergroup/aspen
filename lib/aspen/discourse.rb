@@ -52,16 +52,20 @@ module Aspen
       maybe_attr.value_or(primary_default_attr_name)
     end
 
-    def label_allowed?(label)
-      list = whitelist_for(:nodes)
-      return true if list.empty?
-      list.include? label
+    def allowed_labels
+      @al ||= whitelist_for(:nodes)
     end
 
-    def edge_allowed?(edge)
-      list = whitelist_for(:relationships)
-      return true if list.empty?
-      list.include? edge
+    def allowed_edges
+      @ae ||= whitelist_for(:edges)
+    end
+
+    def allows_label?(label)
+      allowed_labels.empty? || allowed_labels.include?(label)
+    end
+
+    def allows_edge?(edge)
+      allowed_edges.empty? || allowed_edges.include?(edge)
     end
 
     def reciprocal
@@ -85,8 +89,10 @@ module Aspen
     end
 
     def whitelist_for(stuff)
-      maybe_whitelist = Maybe(@data.dig(:only, stuff))
-      maybe_whitelist.value_or("").split(",").map(&:strip)
+      maybe_whitelist = Maybe(@data.dig(:allow_only, stuff))
+      list = maybe_whitelist.value_or([])
+      return list if list.is_a? Array  # If it's already a YAML list, great.
+      list.split(",").map(&:strip)      # Otherwise, split the comma-separated string
     end
 
     # Converts multiple lines

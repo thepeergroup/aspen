@@ -1,0 +1,11 @@
+default:
+  label: Person
+allow_only:
+  nodes: Person, Employer
+  edges:
+    - knows
+    - works at
+----
+
+(Liz) [works at] (Company: Kabletown).
+(Liz) [knows] (Jack).

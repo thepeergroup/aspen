@@ -1,5 +1,4 @@
 require 'aspen'
-require 'json'
 
 describe Aspen::Discourse do
 
@@ -11,7 +10,6 @@ describe Aspen::Discourse do
     context "file types" do
       let(:yaml) { "default:\n  label: Person"  }
       let(:hash) { YAML.load(yaml) }
-      let(:json) { hash.to_json }
 
       it "loads YAML" do
         expect(described_class.from_yaml(yaml)).to be_an Aspen::Discourse
@@ -35,12 +33,12 @@ describe Aspen::Discourse do
         end
       end
 
-      it "#label_allowed?" do
-        expect(discourse.label_allowed?(some_labels.sample)).to be true
+      it "#allows_label?" do
+        expect(discourse.allows_label?(some_labels.sample)).to be true
       end
 
-      it "#edge_allowed?" do
-        expect(discourse.edge_allowed?(some_edges.sample)).to be true
+      it "#allows_edge?" do
+        expect(discourse.allows_edge?(some_edges.sample)).to be true
       end
 
       it "#reciprocal?" do
@@ -111,19 +109,19 @@ describe Aspen::Discourse do
         pending "it sets a typed default attribute"
       end # /typed
 
-      context "with specified nodes" do
-        let (:config) { { only: { nodes: "Entity, Person, PollingPlace" } } }
-        it "#label_allowed?" do
-          expect(discourse.label_allowed?("Entity")).to be true
-          expect(discourse.label_allowed?("Friend")).to be false
+      context "with protected nodes" do
+        let (:config) { { allow_only: { nodes: "Entity, Person, PollingPlace" } } }
+        it "#allows_label?" do
+          expect(discourse.allows_label?("Entity")).to be true
+          expect(discourse.allows_label?("Friend")).to be false
         end
       end
 
-      context "with specified relationships" do
-        let (:config) { { only: { relationships: "knows, founded company with" } } }
-        it "#edge_allowed?" do
-          expect(discourse.edge_allowed?("knows")).to be true
-          expect(discourse.edge_allowed?("is friends with")).to be false
+      context "with protected relationships" do
+        let (:config) { { allow_only: { edges: "knows, founded company with" } } }
+        it "#allows_edge?" do
+          expect(discourse.allows_edge?("knows")).to be true
+          expect(discourse.allows_edge?("is friends with")).to be false
         end
       end
 

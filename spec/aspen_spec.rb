@@ -75,6 +75,29 @@ describe Aspen do
         expect(Aspen.compile_text(aspen)).to eql(cypher)
       end
     end
+
+    context 'with protections' do
+      context 'and an invalid label' do
+        let(:filename) { 'protection-invalid-label' }
+        it 'raises' do
+          expect { Aspen.compile_text(aspen) }.to raise_error(Aspen::Error)
+        end
+      end
+
+      context 'and an invalid edge' do
+        let(:filename) { 'protection-invalid-edge' }
+        it 'raises' do
+          expect { Aspen.compile_text(aspen) }.to raise_error(Aspen::Error)
+        end
+      end
+
+      context 'and valid content' do
+        let(:filename) { 'protection-valid' }
+        it 'renders' do
+          expect(Aspen.compile_text(aspen)).to eql(cypher)
+        end
+      end
+    end
   end
 
   pending "minimal Aspen (just a node) compiles" do

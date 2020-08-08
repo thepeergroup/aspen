@@ -60,7 +60,7 @@ module Aspen
 
       def match!(text)
         unless match(text)
-          raise Aspen::LookupError, <<~ERROR
+          raise Aspen::MatchError, <<~ERROR
             Couldn't find an Aspen grammar that matched the line:
 
                 #{text}

@@ -275,7 +275,7 @@ default
 (Liz) [works at] (Employer, Kabletown)
 ```
 
-The `default_attribute` line tells Aspen that when we encounter a node in default-attribute form, that it should assign the content for a node beginning  with `Employer` to `company_name`.
+The lines under `attributes` tells Aspen that when we encounter a node in grouped form like `Employer, Kabletown`, that it should set `Kabletown` as the `company_name` of the node.
 
 The whole code all together is:
 
@@ -312,6 +312,35 @@ MERGE (person_liz)-[:WORKS_AT]->(employer_kabletown)
 >
 > [Help fix this issue.](https://github.com/beechnut/aspen/issues/9)
 
+#### Protections
+
+Writing freeform text using Aspen can easily lead to typos, and typos in your graph model are no fun.
+
+> Example: It would be really easy to write a node using the label `Persno` and not catch it. When you go to query your data for `Person` nodes, the one with the `Persno` label won't even show up.
+
+So, Aspen provides Protections that catches typos in node labels and edge names.
+
+For example, to ensure that you can only have `Person` and `Employer` nodes, and that the only relationships allowed are `knows` and `works at`, write the following in your discourse.
+
+```yaml
+allow_only:
+  nodes: Person, Employer
+  edges: knows, works at
+```
+
+You can write longer protection lists using list items, like this:
+```yaml
+allow_only:
+  nodes:
+    - Person
+    - Employer
+  edges:
+    - knows
+    - works at
+```
+
+If you make a typo in your narrative, or try to use a label that isn't `Person` or `Employer`, you'll get an error.
+
 #### Custom Grammars
 
 Let's say you have a data model that tracks donations to local political candidates. Being the adept data modeler you are, you create a model that models donations as nodes, with relationships between the donor and donation, and between the recipient and donation.
@@ -341,6 +370,8 @@ You may already be seeing some issues with this, like:
 To solve all of these issues, we can define custom grammars.
 
 __Custom grammars__ define sentences and assign them to Cypher statements. Once we define a custom grammar, we can write a simple sentence—with no parentheses or brackets!—and it will populate a Cypher statement.
+
+> NOTE: Protections don't cover Custom Grammar—only "vanilla" Aspen. We figure, if you're writing a custom grammar, you're being careful about the Cypher template you're writing.
 
 Let's say we want to be able to write "Chuck donated $20 to Alexandria.", and have it map to a Cypher statement.
 

@@ -138,15 +138,29 @@ module Aspen
     end
 
     def visit_edge(node)
+      content = visit(node.content)
+      unless discourse.allows_edge?(content)
+        raise Aspen::CompileError, """
+          Your narrative includes an edge called '#{content}',
+          but only #{discourse.allowed_edges} are allowed.
+        """
+      end
       Aspen::Edge.new(
-        word: visit(node.content),
+        word: content,
         reciprocal: discourse.reciprocal?(visit(node.content))
       )
     end
 
     def visit_label(node)
       content = visit(node.content)
-      Maybe(content).value_or(discourse.default_label)
+      label = Maybe(content).value_or(discourse.default_label)
+      unless discourse.allows_label?(label)
+        raise Aspen::CompileError, """
+          Your narrative includes a node with label '#{label}',
+          but only #{discourse.allowed_labels} are allowed.
+        """
+      end
+      return label
     end
 
     def visit_attribute(node)

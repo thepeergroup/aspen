@@ -2,15 +2,12 @@ module Aspen
 
   class Error          < StandardError ; end
 
-  class AttributeCollisionError < Error ; end
-  class BodyError      < Error ; end
-  class DiscourseError < Error ; end
   class LexError       < Error ; end
-  class LookupError    < Error ; end
-  class MatchError     < Error ; end
   class ParseError     < Error ; end
-  class StatementError < Error ; end
-  class TagError       < Error ; end
+  class CompileError   < Error ; end
+  class MatchError     < Error ; end
+
+  class AttributeCollisionError < Error ; end
 
   class Errors
     def self.messages(lookup, *args)
