@@ -8,10 +8,13 @@ module Aspen
   narrative = statements;
   statements = { statement }
   statement = COMMENT | CUSTOM_STATEMENT | list_statement | vanilla_statement
+
   # Variant 1. TODO: Variant 2
-  list_statement = node, edge, LABEL, START_LIST, list_items, END_LIST
+  list_statement = node, edge, [ list_label ], START_LIST, list_items, END_LIST
+  list_label = OPEN_PARENS, LABEL, CLOSE_PARENS
   list_items = { list_item }
-  list_item = BULLET, CONTENT
+  list_item = BULLET, CONTENT, [ list_item_label ]
+  list_item_label = OPEN_PARENS, LABEL, CLOSE_PARENS
   vanilla_statement = node | node, edge, node, { END_STATEMENT }
   node = node_short_form | node_grouped_form | node_cypher_form
   node_short_form = OPEN_PARENS, CONTENT, CLOSE_PARENS
@@ -63,12 +66,9 @@ module Aspen
 
     def parse_list_statement
       if expect(:PREPARE_START_LIST)
-        origin = parse_node
-        edge   = parse_edge
-        _, plural_label, _  = need(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS)
-        # If singularizing should be conditional, we need to introduce the env in the parser.
-        label = plural_label.last.singularize
-        # puts "LABEL: #{label.inspect}"
+        origin  = parse_node
+        edge    = parse_edge
+        label   = parse_list_label
         targets = parse_list_items
         expect(:END_LIST)
         targets.map do |target|
@@ -77,6 +77,13 @@ module Aspen
           # puts "TARGET #{target.attribute.content.inner_content} has label #{target.label.content.inner_content.inspect}"
           Aspen::AST::Nodes::Statement.new(origin: origin, edge: edge, dest: target)
         end
+      end
+    end
+
+    def parse_list_label
+      if (_, plural_label, _  = expect(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS))
+        # If singularizing should be conditional, we need to introduce the env in the parser.
+        return plural_label.last.singularize
       end
     end
 
@@ -91,10 +98,23 @@ module Aspen
     end
 
     def parse_list_item
+      node = nil
       if (_, content = expect(:BULLET, :CONTENT))
-        Aspen::AST::Nodes::Node.new(attribute: content.last)
+        node = Aspen::AST::Nodes::Node.new(attribute: content.last)
+      end
+      if (label = parse_list_item_label)
+        node.label = label
+      end
+      return node
+    end
+
+    def parse_list_item_label
+      if (_, item_label, _  = expect(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS))
+        # If singularizing should be conditional, we need to introduce the env in the parser.
+        return item_label.last
       end
     end
+
 
     def parse_node_labeled_form
       raise NotImplementedError, "#parse_node_labeled_form not yet implemented"

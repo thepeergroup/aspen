@@ -162,7 +162,7 @@ describe Aspen::Lexer do
             [:CONTENT, "Producer"],
             [:CLOSE_PARENS]
           ] }
-          pending "tokenizes" do
+          it "tokenizes" do
             expect(described_class.tokenize(code)).to eq(tokens)
           end
         end

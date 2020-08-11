@@ -24,8 +24,8 @@ module Aspen
       grammar = environment.grammar
 
       until scanner.eos?
-        # puts "states: #{stack}"
-        # puts tokens.inspect
+        # puts "tokens (6): #{tokens.last(6).inspect}"
+        # puts "\n(#{state}) stack: #{stack}"
         # puts "grammar: #{grammar.inspect}"
 
         # Match custom grammars
@@ -82,6 +82,7 @@ module Aspen
           elsif scanner.scan(/\n/) && stack == [:list, :node]
             # If it's a list node and we encounter a newline,
             # pop :node so we can move back to the list.
+            scanner.unscan
             pop_state
           elsif scanner.scan(/[[[:alnum:]][[:blank:]]\"\'\.]+/)
             tokens << [:CONTENT, scanner.matched.strip]
@@ -139,7 +140,7 @@ module Aspen
           if scanner.scan(/([\-\*\+])/) # -, *, or + (any allowed by Markdown)
             tokens << [:BULLET, scanner.matched]
             push_state :node
-          elsif scanner.scan(/\n/)
+          elsif scanner.scan(/\n\n/)
             tokens << [:END_LIST]
             pop_state
           elsif scanner.scan(/\s/)
