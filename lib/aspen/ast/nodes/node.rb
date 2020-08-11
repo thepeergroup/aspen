@@ -10,6 +10,10 @@ module Aspen
           @label     = Aspen::AST::Nodes::Label.new(label)
         end
 
+        def label=(content)
+          @label = Aspen::AST::Nodes::Label.new(content)
+        end
+
       end
     end
   end

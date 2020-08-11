@@ -39,6 +39,15 @@ module Aspen
           end
         end
 
+        # If the line ends with :, it's starting a list.
+        if scanner.beginning_of_line?
+          line = scanner.scan(/^.*$/)
+          if line.match? /:$/
+            tokens << [:PREPARE_START_LIST]
+          end
+          scanner.unscan
+        end
+
         # Standard Aspen syntax
         case state
         when :default then
@@ -130,6 +139,9 @@ module Aspen
           if scanner.scan(/([\-\*\+])/) # -, *, or + (any allowed by Markdown)
             tokens << [:BULLET, scanner.matched]
             push_state :node
+          elsif scanner.scan(/\n/)
+            tokens << [:END_LIST]
+            pop_state
           elsif scanner.scan(/\s/)
             # NO OP
           else

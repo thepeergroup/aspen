@@ -51,41 +51,83 @@ describe Aspen::Parser do
       end
     end
 
-    # TODO: Change "pending" to "context" to start doing list statements.
-    pending "lists" do
+    context "lists" do
+      let(:ast) { described_class.parse_code(code) }
 
       # Will need to look ahead to end of line after bracket.
-      context "with same label" do
-        let(:code) {
-          <<~ASPEN
-            (Liz) [works with] (Writers):
-              - Frank
-              - Lutz
-              - Toofer
+      context "with grouping label" do
+        context "with short form origin" do
+          let(:code) {
+            <<~ASPEN
+              (Liz) [works with] (Writers):
+                - Frank
+                - Lutz
+                - Toofer
 
-          ASPEN
-        }
+              (Liz) [knows] (Jack).
+            ASPEN
+          }
 
-        let(:ast) { }
-        pending "parses" do
-          expect(described_class.parse_code(code)).to eq(ast)
+          let(:statements) { ast.statements.first(3) }
+
+          it "parses four statements" do
+            expect(statements.count).to eq(3)
+          end
+
+          it "gets the right origin" do
+            origin = statements.last.origin
+
+            expect(origin.label.content.inner_content).to eq(nil)
+            expect(origin.attribute.content.inner_content).to eq("Liz")
+          end
+
+          it "sets the right label" do
+            label = statements.last.edge.content.inner_content
+            expect(label).to eq("works with")
+          end
+
+          it "gets the right targets" do
+            statements.each do |st|
+              expect(st.target.label.content.inner_content).to eq("Writer")
+            end
+
+            names = statements.map { |st| st.target.attribute.content.inner_content }
+            expect(names).to eq(["Frank", "Lutz", "Toofer"])
+          end
+        end
+
+        context "with grouping label" do
+          let(:code) {
+            <<~ASPEN
+              (Person, Liz) [works with] (Writers):
+                - Frank
+                - Lutz
+                - Toofer
+            ASPEN
+          }
+
+          it "gets the right origin" do
+            origin = ast.statements.last.origin
+
+            expect(origin.label.content.inner_content).to eq("Person")
+            expect(origin.attribute.content.inner_content).to eq("Liz")
+          end
         end
       end
 
-      context "with different labels" do
-        let(:code) {
-          <<~ASPEN
-            (Liz) [works with]:
-              * Tracy Jordan (Actor)
-              * Jenna Maroney (Actor)
-              * Peter "Pete" Hornberger (Producer)
-          ASPEN
-        }
-        let(:ast) { }
-        pending "parses" do
-          expect(described_class.parse_code(code)).to eq(ast)
-        end
-      end
+      # context "with different labels" do
+      #   let(:code) {
+      #     <<~ASPEN
+      #       (Liz) [works with]:
+      #         * Tracy Jordan (Actor)
+      #         * Jenna Maroney (Actor)
+      #         * Peter "Pete" Hornberger (Producer)
+      #     ASPEN
+      #   }
+      #   pending "parses" do
+      #     expect(ast).to eq(nil)
+      #   end
+      # end
 
     end # lists
   end # statements

@@ -89,10 +89,12 @@ describe Aspen::Lexer do
                 - Lutz
                 - Toofer
 
+              (Liz) [knows] (Jack).
             ASPEN
           }
 
           let(:tokens) { [
+            [:PREPARE_START_LIST],
             [:OPEN_PARENS],
             [:CONTENT, "Liz"],
             [:CLOSE_PARENS],
@@ -108,7 +110,18 @@ describe Aspen::Lexer do
             [:BULLET, "-"],
             [:CONTENT, "Lutz"],
             [:BULLET, "-"],
-            [:CONTENT, "Toofer"]
+            [:CONTENT, "Toofer"],
+            [:END_LIST],
+            [:OPEN_PARENS],
+            [:CONTENT, "Liz"],
+            [:CLOSE_PARENS],
+            [:OPEN_BRACKETS],
+            [:CONTENT, "knows"],
+            [:CLOSE_BRACKETS],
+            [:OPEN_PARENS],
+            [:CONTENT, "Jack"],
+            [:CLOSE_PARENS],
+            [:END_STATEMENT, "."]
           ] }
           it "tokenizes" do
             expect(described_class.tokenize(code)).to eq(tokens)
@@ -125,6 +138,7 @@ describe Aspen::Lexer do
             ASPEN
           }
           let(:tokens) { [
+            [:PREPARE_START_LIST],
             [:OPEN_PARENS],
             [:CONTENT, "Liz"],
             [:CLOSE_PARENS],
@@ -148,7 +162,7 @@ describe Aspen::Lexer do
             [:CONTENT, "Producer"],
             [:CLOSE_PARENS]
           ] }
-          it "tokenizes" do
+          pending "tokenizes" do
             expect(described_class.tokenize(code)).to eq(tokens)
           end
         end

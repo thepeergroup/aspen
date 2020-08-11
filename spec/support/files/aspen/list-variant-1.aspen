@@ -1,0 +1,9 @@
+(Karl) [knows] (Matt).
+
+(Karl) [knows about] (States):
+  - Rhode Island
+  - Massachusetts
+  - Maine
+
+# Should be able to render text after the list
+(Karl) [has job] (Job: Consultant).

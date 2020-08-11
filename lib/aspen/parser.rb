@@ -1,3 +1,5 @@
+require 'active_support/inflector'
+
 module Aspen
   class Parser < AbstractParser
 
@@ -5,17 +7,18 @@ module Aspen
 
   narrative = statements;
   statements = { statement }
-  statement = vanilla_statement | list_statement | CUSTOM_STATEMENT
+  statement = COMMENT | CUSTOM_STATEMENT | list_statement | vanilla_statement
+  # Variant 1. TODO: Variant 2
+  list_statement = node, edge, LABEL, START_LIST, list_items, END_LIST
+  list_items = { list_item }
+  list_item = BULLET, CONTENT
   vanilla_statement = node | node, edge, node, { END_STATEMENT }
   node = node_short_form | node_grouped_form | node_cypher_form
   node_short_form = OPEN_PARENS, CONTENT, CLOSE_PARENS
-  node_grouped_form = OPEN_PARENS, { CONTENT, [COMMA] }, CLOSE_PARENS
-  node_cypher_form = OPEN_PARENS, LABEL, OPEN_BRACES, { IDENTIFIER, literal, [COMMA] }, CLOSE_BRACES
+  node_grouped_form = OPEN_PARENS, { CONTENT, [ COMMA ] }, CLOSE_PARENS
+  node_cypher_form = OPEN_PARENS, LABEL, OPEN_BRACES, { IDENTIFIER, literal, [ COMMA ] }, CLOSE_BRACES
   literal = STRING | NUMBER
   edge = OPEN_BRACKETS, CONTENT, CLOSE_BRACKETS
-  list_statement = node, edge, LABEL, START_LIST, list_items
-  list_items = { BULLET, [ node_labeled_form ] }, END_LIST
-  node_labeled_form = CONTENT, OPEN_PARENS, CONTENT, CLOSE_PARENS
 
 =end
 
@@ -30,7 +33,7 @@ module Aspen
 
       # Make sure this returns on empty
       while result = parse_statement
-        results << result
+        results.push(*result)
         break if tokens[position].nil?
       end
 
@@ -38,10 +41,10 @@ module Aspen
     end
 
     def parse_statement
-      parse_comment ||
-      parse_custom_statement ||
-      parse_vanilla_statement ||
-      parse_list_statement
+      parse_comment           ||
+      parse_custom_statement  ||
+      parse_list_statement    ||
+      parse_vanilla_statement
     end
 
     def parse_comment
@@ -56,6 +59,45 @@ module Aspen
         # Seems unnecessarily nested. Maybe this happened in the lexer.
         Aspen::AST::Nodes::CustomStatement.new(content.first.last)
       end
+    end
+
+    def parse_list_statement
+      if expect(:PREPARE_START_LIST)
+        origin = parse_node
+        edge   = parse_edge
+        _, plural_label, _  = need(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS)
+        # If singularizing should be conditional, we need to introduce the env in the parser.
+        label = plural_label.last.singularize
+        # puts "LABEL: #{label.inspect}"
+        targets = parse_list_items
+        expect(:END_LIST)
+        targets.map do |target|
+          # puts "TARGET #{target.attribute.content.inner_content} had label #{target.label.content.inner_content.inspect}"
+          target.label = label if target.label.content.inner_content.nil?
+          # puts "TARGET #{target.attribute.content.inner_content} has label #{target.label.content.inner_content.inspect}"
+          Aspen::AST::Nodes::Statement.new(origin: origin, edge: edge, dest: target)
+        end
+      end
+    end
+
+    def parse_list_items
+      if need(:START_LIST)
+        results = []
+        while target = parse_list_item
+          results << target
+        end
+        results
+      end
+    end
+
+    def parse_list_item
+      if (_, content = expect(:BULLET, :CONTENT))
+        Aspen::AST::Nodes::Node.new(attribute: content.last)
+      end
+    end
+
+    def parse_node_labeled_form
+      raise NotImplementedError, "#parse_node_labeled_form not yet implemented"
     end
 
     def parse_vanilla_statement
@@ -75,15 +117,6 @@ module Aspen
       parse_node_grouped_form || parse_node_short_form
     end
 
-    def parse_node_short_form
-      # Terminal instructions require a "need"
-      _, content, _ = need(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS)
-      Aspen::AST::Nodes::Node.new(
-        attribute: content.last,
-        label: nil
-      )
-    end
-
     def parse_node_grouped_form
       if (_, label, sep, content, _ = expect(:OPEN_PARENS, :LABEL, :SEPARATOR, :CONTENT, :CLOSE_PARENS))
         Aspen::AST::Nodes::Node.new(
@@ -91,6 +124,15 @@ module Aspen
           label: label.last
         )
       end
+    end
+
+    def parse_node_short_form
+      # Terminal instructions require a "need"
+      _, content, _ = need(:OPEN_PARENS, :CONTENT, :CLOSE_PARENS)
+      Aspen::AST::Nodes::Node.new(
+        attribute: content.last,
+        label: nil
+      )
     end
 
     # This complicates things greatly. Can we skip this for now,
@@ -111,17 +153,11 @@ module Aspen
       end
     end
 
-    def parse_list_statement
-      raise NotImplementedError, "#parse_list_statement not yet implemented"
-    end
+    # private
 
-    def parse_list_items
-      raise NotImplementedError, "#parse_list_items not yet implemented"
-    end
-
-    def parse_node_labeled_form
-      raise NotImplementedError, "#parse_node_labeled_form not yet implemented"
-    end
+    # def guard(condition)
+    #   return false unless condition
+    # end
 
   end
 end
