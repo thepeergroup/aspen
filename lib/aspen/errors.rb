@@ -2,6 +2,8 @@ module Aspen
 
   class Error          < StandardError ; end
 
+  class ArgumentError  < Error ; end
+
   class LexError       < Error ; end
   class ParseError     < Error ; end
   class CompileError   < Error ; end
