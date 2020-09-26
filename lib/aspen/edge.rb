@@ -6,8 +6,12 @@ module Aspen
       @reciprocal = reciprocal
     end
 
+    def label
+      @word
+    end
+
     def to_cypher
-      "-[:#{@word.parameterize.underscore.upcase}]-#{cap}"
+      "-[:#{label.parameterize.underscore.upcase}]-#{cap}"
     end
 
     private

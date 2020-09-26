@@ -109,12 +109,14 @@ describe Aspen do
       context 'variant 2' do
         let(:filename) { 'list-variant-2' }
         pending 'renders' do
+          fail "not yet implemented"
           expect(Aspen.compile_text(aspen)).to eql(cypher)
         end
       end
       context 'variant 3' do
         let(:filename) { 'list-variant-3' }
         pending 'renders' do
+          fail "not yet implemented"
           expect(Aspen.compile_text(aspen)).to eql(cypher)
         end
       end

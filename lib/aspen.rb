@@ -39,6 +39,10 @@ module Aspen
     end
   end
 
+  def self.available_formats
+    [:cypher, :json, :gexf]
+  end
+
   private
 
   def self.assert_text(text)

@@ -13,6 +13,15 @@ module Aspen
     def initialize(root, environment = {})
       @root = root
       @environment = environment
+      @adapter = environment.fetch(:adapter, :cypher).to_sym
+      unless Aspen.available_formats.include?(@adapter)
+        raise Aspen::ArgumentError, <<~MSG
+          The adapter, also known as the output format, must be one of:
+          #{Aspen.available_formats.join(', ')}.
+
+          What Aspen received was #{@adapter}.
+        MSG
+      end
     end
 
     def render
@@ -39,22 +48,85 @@ module Aspen
       end.reject { |elem| elem == :comment }
       nodes         = format_nodes(statements)
       relationships = format_relationships(statements)
-      return [nodes, "\n\n",  relationships, "\n;\n"].join()
+
+      case @adapter
+      when :cypher then
+        return [nodes, "\n\n",  relationships, "\n;\n"].join()
+      when :json then
+        { nodes: nodes, edges: relationships }.to_json
+      when :gexf then
+        joiner = "\n            "
+        <<~GEXF
+          <gexf xmlns="http://www.gexf.net/1.2draft" version="1.2">
+              <graph mode="static" defaultedgetype="directed">
+                  <nodes>
+                      #{nodes.map(&:strip).join(joiner)}
+                  </nodes>
+                  <edges>
+                      #{relationships.map(&:strip).join(joiner)}
+                  </edges>
+              </graph>
+          </gexf>
+        GEXF
+      else
+        raise Aspen::CompileError, "No adapter for #{@adapter.to_s}"
+      end
     end
 
     def format_nodes(statements)
-      statements.
-        flat_map(&:nodes).
-        map { |node| "MERGE #{node.to_cypher}" }.
-        uniq.
-        join("\n")
+      case @adapter
+      when :cypher then
+        statements.
+          flat_map(&:nodes).
+          map { |node| "MERGE #{node.to_cypher}" }.
+          uniq.
+          join("\n")
+      when :json then
+        statements.flat_map(&:nodes).map do |node|
+          node.attributes.merge({
+            id: node.nickname,
+            label: node.label
+          })
+        end
+      when :gexf then
+        statements.flat_map(&:nodes).map do |node|
+          attrs = node.attributes.map do |k, v|
+            "#{k}=\"#{v}\""
+          end.join(" ")
+          <<~GEXF
+            <node id="#{node.nickname}" label="#{node.label}" #{attrs}>
+          GEXF
+        end
+      else
+        raise Aspen::ArgumentError, "No adapter for #{@adapter.to_s}"
+      end
     end
 
     def format_relationships(statements)
-      statements.
-        flat_map(&:to_cypher).
-        map { |statement_cypher| "MERGE #{statement_cypher}" }.
-        join("\n")
+      case @adapter
+      when :cypher then
+        statements.
+          flat_map(&:to_cypher).
+          map { |statement_cypher| "MERGE #{statement_cypher}" }.
+          join("\n")
+      when :json then
+        statements.map.with_index do |st, id|
+          {
+            id: "e#{id}",
+            source: st.origin.nickname,
+            target: st.destination.nickname,
+            label: st.edge.label
+          }
+        end
+      when :gexf then
+        statements.map.with_index do |st, id|
+          <<~GEXF
+            <edge id="#{id}" source="#{st.origin.nickname}" target="#{st.destination.nickname}" label="#{st.edge.label}">
+          GEXF
+        end
+      else
+        raise Aspen::ArgumentError, "No adapter for #{@adapter.to_s}"
+      end
     end
 
     def visit_statement(node)
@@ -140,7 +212,7 @@ module Aspen
     def visit_edge(node)
       content = visit(node.content)
       unless discourse.allows_edge?(content)
-        raise Aspen::CompileError, """
+        raise Aspen::Error, """
           Your narrative includes an edge called '#{content}',
           but only #{discourse.allowed_edges} are allowed.
         """
