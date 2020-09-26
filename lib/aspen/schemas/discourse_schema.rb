@@ -37,6 +37,8 @@ module Aspen
     DiscourseSchema = Dry::Schema.Params do
       config.validate_keys = true
 
+      optional(:adapter)
+
       optional(:default).hash do
         optional(:label).filled(:string, format?: LABEL)
         optional(:attribute).filled(:string, format?: IDENT)
