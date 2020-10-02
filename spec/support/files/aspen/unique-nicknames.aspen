@@ -8,8 +8,8 @@ grammar:
       - (Person a) and (Person b) met through Graphs4Good.
       - (Person a) met (Person b) at Graphs4Good.
     template: |
-      {{{a}}}<-[:INCLUDES]-({{{uniq_intro}}}:Introduction)-[:INCLUDES]->{{{b}}},
-      ({{{uniq_intro}}})-[:OCCURRED_AT]->(:Event { title: "Graphs4Good Kickoff" }),
+      {{{a}}}<-[:INCLUDES]-({{{uniq_intro}}}:Introduction)-[:INCLUDES]->{{{b}}}
+      ({{{uniq_intro}}})-[:OCCURRED_AT]->(:Event { title: "Graphs4Good Kickoff" })
       {{{a}}}-[:KNOWS]-{{{b}}}
 ----
 

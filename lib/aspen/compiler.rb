@@ -109,10 +109,15 @@ module Aspen
     def format_relationships(statements)
       case @adapter
       when :cypher then
-        statements.
-          flat_map(&:to_cypher).
-          map { |statement_cypher| "MERGE #{statement_cypher}" }.
-          join("\n")
+        statements.map do |statement|
+          if statement.is_a? Aspen::CustomStatement
+            statement.to_cypher.lines.map { |line| "MERGE #{line}" }.join()
+          elsif statement.is_a? Aspen::Statement
+            "MERGE #{statement.to_cypher}"
+          else
+            raise ArgumentError, "Statement is the wrong type."
+          end
+        end.join("\n")
       when :json then
         statements.map.with_index do |st, id|
           {
@@ -144,6 +149,7 @@ module Aspen
     # TODO: When you pick up, get the labels back into here.
     #   Labelreg? typereg[:labels]?
     # FIXME: This is doing too much.
+    # IDEA: Can't we have typed attributes come from the Grammar?
     def visit_customstatement(node)
       statement = visit(node.content)
       matcher   = discourse.grammar.matcher_for(statement)

@@ -11,7 +11,7 @@ module Aspen
         scanner = StringScanner.new(code)
         tokens = []
 
-        # puts "tokens: #{tokens} | state: #{state} | stack: #{stack}"
+        puts "tokens: #{tokens} | state: #{state} | stack: #{stack}"
 
         until scanner.eos?
           case state
