@@ -3,9 +3,10 @@ require 'aspen'
 describe Aspen::Compiler do
 
   let (:code)   { "(Liz) [knows] (Jack)." }
-  let (:tokens) { Aspen::Lexer.tokenize(code, environment) }
-  let (:ast)    { Aspen::Parser.parse(tokens, environment) }
-  let (:result) { Aspen::Compiler.new(ast, environment).render }
+  let (:env)    { environment.merge({ reciprocal: "knows" }) }
+  let (:tokens) { Aspen::Lexer.tokenize(code, env) }
+  let (:ast)    { Aspen::Parser.parse(tokens, env) }
+  let (:result) { Aspen::Compiler.new(ast, env).render }
 
   context 'Cypher adapter (default)' do
     let (:environment) { { adapter: :cypher } }
@@ -15,7 +16,7 @@ describe Aspen::Compiler do
         MERGE (entity_liz:Entity { name: "Liz" })
         MERGE (entity_jack:Entity { name: "Jack" })
 
-        MERGE (entity_liz)-[:KNOWS]->(entity_jack)
+        MERGE (entity_liz)-[:KNOWS]-(entity_jack)
         ;
       CYPHER
       )
@@ -25,7 +26,7 @@ describe Aspen::Compiler do
   context 'JSON adapter' do
     let (:environment) { { adapter: :json } }
     it 'renders JSON' do
-      expected = '{"nodes":[{"name":"Liz","id":"entity_liz","label":"Entity"},{"name":"Jack","id":"entity_jack","label":"Entity"}],"edges":[{"id":"e0","source":"entity_liz","target":"entity_jack","label":"knows"}]}'
+      expected = '{"nodes":[{"name":"Liz","id":"entity_liz","label":"Entity"},{"name":"Jack","id":"entity_jack","label":"Entity"}],"edges":[{"id":"e0","source":"entity_liz","target":"entity_jack","label":"knows","reciprocal":true}]}'
       expect(result).to eq(expected)
     end
   end

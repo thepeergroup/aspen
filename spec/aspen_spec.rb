@@ -121,6 +121,13 @@ describe Aspen do
         end
       end
     end
+
+    context 'unique nicknames' do
+      let(:filename) { 'unique-nicknames' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      end
+    end
   end
 
   # pending "minimal Aspen (just a node) compiles" do

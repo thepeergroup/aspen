@@ -14,6 +14,9 @@ module Aspen
       @root = root
       @environment = environment
       @adapter = environment.fetch(:adapter, :cypher).to_sym
+      # FIXME: This is too much responsibility for the compiler.
+      @slug_counters = Hash.new { 1 }
+
       unless Aspen.available_formats.include?(@adapter)
         raise Aspen::ArgumentError, <<~MSG
           The adapter, also known as the output format, must be one of:
@@ -85,7 +88,8 @@ module Aspen
         statements.flat_map(&:nodes).map do |node|
           node.attributes.merge({
             id: node.nickname,
-            label: node.label
+            label: node.label,
+            reciprocal: node.reciprocal?
           })
         end
       when :gexf then
@@ -139,8 +143,7 @@ module Aspen
 
     # TODO: When you pick up, get the labels back into here.
     #   Labelreg? typereg[:labels]?
-    # TODO: There's obviously some objects that want to be
-    #   created here, no?
+    # FIXME: This is doing too much.
     def visit_customstatement(node)
       statement = visit(node.content)
       matcher   = discourse.grammar.matcher_for(statement)
@@ -188,10 +191,27 @@ module Aspen
         hash
       end
 
-      CustomStatement.new(
-        nodes: nodes,
-        cypher: Mustache.render(template.strip, formatted_results)
-      )
+      slugs = template.scan(/{{{?(?<full>uniq_(?<name>\w+))}}}?/).uniq
+      usable_results = if slugs.any?
+        counts = slugs.map do |full, short|
+          [full, "#{short}_#{@slug_counters[full]}"]
+        end.to_h
+
+        context = results.merge(counts)
+        custom_statement = CustomStatement.new(
+          nodes: nodes,
+          cypher: Mustache.render(template.strip, formatted_results.merge(counts))
+        )
+        slugs.each do |full, _|
+          @slug_counters[full] = @slug_counters[full] + 1
+        end
+        return custom_statement
+      else
+        CustomStatement.new(
+          nodes: nodes,
+          cypher: Mustache.render(template.strip, formatted_results)
+        )
+      end
     end
 
     def visit_node(node)
