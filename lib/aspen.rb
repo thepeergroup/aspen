@@ -27,15 +27,15 @@ module Aspen
     Compiler.render(ast, environment)
   end
 
-  def self.compile_text(text)
+  def self.compile_text(text, environment = {})
     assert_text(text)
 
     if text.include?(SEPARATOR)
       env, _sep, code = text.partition(SEPARATOR)
-      compile_code(code, YAML.load(env))
+      compile_code(code, YAML.load(env).merge(environment))
     else
       code = text
-      compile_code(code, {})
+      compile_code(code, environment)
     end
   end
 

@@ -88,8 +88,7 @@ module Aspen
         statements.flat_map(&:nodes).map do |node|
           node.attributes.merge({
             id: node.nickname,
-            label: node.label,
-            reciprocal: node.reciprocal?
+            label: node.label
           })
         end
       when :gexf then
@@ -120,19 +119,30 @@ module Aspen
         end.join("\n")
       when :json then
         statements.map.with_index do |st, id|
-          {
-            id: "e#{id}",
-            source: st.origin.nickname,
-            target: st.destination.nickname,
-            label: st.edge.label
-          }
-        end
+          # Skip Custom Statements: only Cypher for now
+          if st.is_a? Aspen::CustomStatement
+            next # NO OP
+          else
+            {
+              id: "e#{id}",
+              source: st.origin.nickname,
+              target: st.destination.nickname,
+              label: st.edge.label,
+              reciprocal: st.edge.reciprocal?
+            }
+          end
+        end.compact
       when :gexf then
+        # Skip Custom Statements: only Cypher for now
         statements.map.with_index do |st, id|
-          <<~GEXF
-            <edge id="#{id}" source="#{st.origin.nickname}" target="#{st.destination.nickname}" label="#{st.edge.label}">
-          GEXF
-        end
+          if st.is_a? Aspen::CustomStatement
+            next # NO OP
+          else
+            <<~GEXF
+              <edge id="#{id}" source="#{st.origin.nickname}" target="#{st.destination.nickname}" label="#{st.edge.label}">
+            GEXF
+          end
+        end.compact
       else
         raise Aspen::ArgumentError, "No adapter for #{@adapter.to_s}"
       end
@@ -194,6 +204,12 @@ module Aspen
           value
         end
         hash[key] = formatted_value
+
+        # TODO: Trying to insert a p_id as well as p to be used in JSON identifiers.
+        # if value.is_a?(Aspen::Node)
+        #   hash["#{key}_id"] = value.nickname
+        # end
+        # puts "TYPED VALS: #{hash.inspect}"
         hash
       end
 

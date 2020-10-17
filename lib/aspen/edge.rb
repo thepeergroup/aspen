@@ -14,6 +14,10 @@ module Aspen
       "-[:#{label.parameterize.underscore.upcase}]-#{cap}"
     end
 
+    def reciprocal?
+      @reciprocal
+    end
+
     private
 
     def cap
