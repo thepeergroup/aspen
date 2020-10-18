@@ -8,7 +8,11 @@ describe Aspen::Discourse do
   context "valid" do
 
     context "file types" do
-      let(:yaml) { "default:\n  label: Person"  }
+      let(:yaml) { <<~EOS
+        default:
+          label: Person
+        EOS
+      }
       let(:hash) { YAML.load(yaml) }
 
       it "loads YAML" do
@@ -48,11 +52,14 @@ describe Aspen::Discourse do
 
     context "configured" do
 
-      let (:discourse) { described_class.from_hash(config) }
+      let (:discourse) { described_class.from_yaml(config) }
 
       context "with a default label" do
         let (:config) {
-          { default: { label: "Person" } }
+          <<~EOS
+          default:
+            label: Person
+          EOS
         }
 
         it "#default_label" do
@@ -65,8 +72,11 @@ describe Aspen::Discourse do
       end
 
       context "with an untyped attribute" do
-        let (:config) {
-          { default: { label: "Person", attribute: "age" } }
+        let (:config) { <<~EOS
+          default:
+            label: Person
+            attribute: age
+          EOS
         }
 
         it "#default_label" do
@@ -80,13 +90,12 @@ describe Aspen::Discourse do
 
         context "with default attributes" do
           let (:config) do
-            {
-              default: {
-                label: "Person",
-                attribute: "name",
-                attributes: { Person: "age" }
-              }
-            }
+            <<~EOS
+              default:
+                label: Person
+                attributes:
+                  Person: age
+            EOS
           end
 
           it "#default_label" do
@@ -110,7 +119,11 @@ describe Aspen::Discourse do
       end # /typed
 
       context "with protected nodes" do
-        let (:config) { { allow_only: { nodes: "Entity, Person, PollingPlace" } } }
+        let (:config) { <<~EOS
+          allow_only:
+            nodes: Entity, Person, PollingPlace
+          EOS
+        }
         it "#allows_label?" do
           expect(discourse.allows_label?("Entity")).to be true
           expect(discourse.allows_label?("Friend")).to be false
@@ -118,7 +131,11 @@ describe Aspen::Discourse do
       end
 
       context "with protected relationships" do
-        let (:config) { { allow_only: { edges: "knows, founded company with" } } }
+        let (:config) { <<~EOS
+          allow_only:
+            edges: knows, founded company with
+          EOS
+        }
         it "#allows_edge?" do
           expect(discourse.allows_edge?("knows")).to be true
           expect(discourse.allows_edge?("is friends with")).to be false
@@ -126,7 +143,7 @@ describe Aspen::Discourse do
       end
 
       context "with reciprocal relationships" do
-        let (:config) { { reciprocal: "knows" } }
+        let (:config) { "reciprocal: knows" }
         it "#reciprocal?" do
           expect(discourse.reciprocal?("knows")).to be true
           expect(discourse.reciprocal?("hangs out with")).to be false
