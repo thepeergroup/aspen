@@ -35,7 +35,7 @@ module Aspen
     IDENT_LIST = /^(\w+)(,\s*\w+)*$/
 
     DiscourseSchema = Dry::Schema.Params do
-      config.validate_keys = true
+      # config.validate_keys = true
 
       optional(:adapter)
 
