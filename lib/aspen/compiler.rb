@@ -54,7 +54,7 @@ module Aspen
 
       case @adapter
       when :cypher then
-        return [nodes, "\n\n",  relationships, "\n;\n"].join()
+        [nodes, "\n\n",  relationships, "\n;\n"].join()
       when :json then
         { nodes: nodes, edges: relationships }.to_json
       when :gexf then
@@ -227,7 +227,7 @@ module Aspen
         slugs.each do |full, _|
           @slug_counters[full] = @slug_counters[full] + 1
         end
-        return custom_statement
+        custom_statement
       else
         CustomStatement.new(
           nodes: nodes,
@@ -274,7 +274,7 @@ module Aspen
           but only #{discourse.allowed_labels} are allowed.
         """
       end
-      return label
+      label
     end
 
     def visit_attribute(node)
