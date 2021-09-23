@@ -140,7 +140,6 @@ PLATFORMS
 DEPENDENCIES
   aspen!
   dry-schema!
-  minitest (~> 5.0)
   pry
   rake (~> 12.0)
   rspec (~> 3.2)
