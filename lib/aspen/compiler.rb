@@ -45,7 +45,7 @@ module Aspen
       # Instead of letting comments be `nil` and using `#compact`
       # to silently remove them, possibly hiding errors, we "compile"
       # comments as `:comment` and filter them explicitly
-      statements    = node.statements.map do |statement|
+      statements = node.statements.map do |statement|
         # This will visit both regular and custom statements.
         visit(statement)
       end.reject { |elem| elem == :comment }
@@ -104,12 +104,8 @@ module Aspen
 
       formatted_results = typed_results.inject({}) do |hash, elem|
         key, value = elem
-        formatted_value = if value.is_a?(Aspen::Node)
-          value.nickname_node
-        else
-          value
-        end
-        hash[key] = formatted_value
+        f_value = value.is_a?(Aspen::Node) ? value.nickname_node : value
+        hash[key] = f_value
 
         # TODO: Trying to insert a p_id as well as p to be used in JSON identifiers.
         # if value.is_a?(Aspen::Node)

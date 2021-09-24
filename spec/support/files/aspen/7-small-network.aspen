@@ -14,10 +14,10 @@ reciprocal: knows, is friends with
 
 (Brianna) [knows] (Sarah).
 (Eliza) [knows] (Holland).
-(Sarah) [teaches at] (Studio, The Corner Studio)
-(Holland) [teaches at] (Studio, The Corner Studio)
-(Jenna) [owns] (Studio, The Corner Studio)
-(Jenna) [teaches at] (Studio, The Corner Studio)
+(Sarah) [teaches at] (Studio: The Corner Studio)
+(Holland) [teaches at] (Studio: The Corner Studio)
+(Jenna) [owns] (Studio: The Corner Studio)
+(Jenna) [teaches at] (Studio: The Corner Studio)
 
 (Rebecca) [knows] (Jenna)
 (Rebecca) [is friends with] (Matt)
