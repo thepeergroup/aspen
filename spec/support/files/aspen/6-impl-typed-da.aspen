@@ -5,4 +5,4 @@ default:
     PollingPlace: voters
 ----
 
-(PollingPlace, 100) [outmarketed] (PollingPlace, 10)
+(PollingPlace: 100) [outmarketed] (PollingPlace: 10)

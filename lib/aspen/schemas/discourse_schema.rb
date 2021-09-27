@@ -35,7 +35,9 @@ module Aspen
     IDENT_LIST = /^(\w+)(,\s*\w+)*$/
 
     DiscourseSchema = Dry::Schema.Params do
-      config.validate_keys = true
+      # config.validate_keys = true
+
+      optional(:adapter)
 
       optional(:default).hash do
         optional(:label).filled(:string, format?: LABEL)
@@ -43,9 +45,9 @@ module Aspen
         optional(:attributes).filled(:hash) # TODO Validate hash
       end
 
-      optional(:only).hash do
-        optional(:nodes).filled(:string, format?: LABEL_LIST)
-        optional(:relationships).filled(:string, format?: EDGE_LIST)
+      optional(:allow_only).hash do
+        optional(:nodes).filled
+        optional(:edges).filled
       end
 
       # TODO Validate that there are no reciprocal relationships

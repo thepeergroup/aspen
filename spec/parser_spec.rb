@@ -20,7 +20,7 @@ describe Aspen::Parser do
     end
 
     context "with grouped form" do
-      let(:code) { "(Jack) [is the boss of] (Person, Liz M. Lemon)" }
+      let(:code) { "(Jack) [is the boss of] (Person: Liz M. Lemon)" }
       it "parses" do
         res = described_class.parse_code(code)
         expect(res.statements.first.target).to be_a(node)
@@ -99,7 +99,7 @@ describe Aspen::Parser do
         context "with grouping label" do
           let(:code) {
             <<~ASPEN
-              (Person, Liz) [works with] (Writers):
+              (Person: Liz) [works with] (Writers):
                 - Frank
                 - Lutz
                 - Toofer

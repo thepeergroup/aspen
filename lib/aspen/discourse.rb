@@ -21,7 +21,8 @@ module Aspen
       if result.success?
         new(data)
       else
-        raise Aspen::Error, result.errors
+        # TODO: Improve this output for human readability
+        raise Aspen::Error, result.errors.messages.to_s
       end
     end
 

@@ -9,16 +9,14 @@ require 'aspen/custom_grammar/grammar'
 module Aspen
   module CustomGrammar
 
-    def self.compile_pattern(expression)
-      tokens = Aspen::CustomGrammar::Lexer.tokenize(expression)
-      ast = Aspen::CustomGrammar::Parser.parse(tokens)
-      Aspen::CustomGrammar::Compiler.compile(ast)[:pattern]
-    end
-
     def self.compile(expression)
       tokens = Aspen::CustomGrammar::Lexer.tokenize(expression)
       ast = Aspen::CustomGrammar::Parser.parse(tokens)
       Aspen::CustomGrammar::Compiler.compile(ast)
+    end
+
+    def self.compile_pattern(expression)
+      self.compile(expression)[:pattern]
     end
 
   end

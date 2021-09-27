@@ -1,0 +1,17 @@
+default:
+  attributes:
+    Event: title
+
+grammar:
+  -
+    match:
+      - (Person a) and (Person b) met through Graphs4Good.
+      - (Person a) met (Person b) at Graphs4Good.
+    template: |
+      {{{a}}}<-[:INCLUDES]-({{{uniq_intro}}}:Introduction)-[:INCLUDES]->{{{b}}}
+      ({{{uniq_intro}}})-[:OCCURRED_AT]->(:Event { title: "Graphs4Good Kickoff" })
+      {{{a}}}-[:KNOWS]-{{{b}}}
+----
+
+Matt and Alyssa met through Graphs4Good.
+Alyssa met Joel at Graphs4Good.

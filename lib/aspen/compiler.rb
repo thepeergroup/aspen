@@ -13,6 +13,18 @@ module Aspen
     def initialize(root, environment = {})
       @root = root
       @environment = environment
+      @adapter = environment.fetch(:adapter, :cypher).to_sym
+      # FIXME: This is too much responsibility for the compiler.
+      @slug_counters = Hash.new { 1 }
+
+      unless Aspen.available_formats.include?(@adapter)
+        raise Aspen::ArgumentError, <<~MSG
+          The adapter, also known as the output format, must be one of:
+          #{Aspen.available_formats.join(', ')}.
+
+          What Aspen received was #{@adapter}.
+        MSG
+      end
     end
 
     def render
@@ -33,28 +45,13 @@ module Aspen
       # Instead of letting comments be `nil` and using `#compact`
       # to silently remove them, possibly hiding errors, we "compile"
       # comments as `:comment` and filter them explicitly
-      statements    = node.statements.map do |statement|
+      statements = node.statements.map do |statement|
         # This will visit both regular and custom statements.
         visit(statement)
       end.reject { |elem| elem == :comment }
-      nodes         = format_nodes(statements)
-      relationships = format_relationships(statements)
-      return [nodes, "\n\n",  relationships, "\n;\n"].join()
-    end
 
-    def format_nodes(statements)
-      statements.
-        flat_map(&:nodes).
-        map { |node| "MERGE #{node.to_cypher}" }.
-        uniq.
-        join("\n")
-    end
-
-    def format_relationships(statements)
-      statements.
-        flat_map(&:to_cypher).
-        map { |statement_cypher| "MERGE #{statement_cypher}" }.
-        join("\n")
+      renderer_klass = Kernel.const_get("Aspen::Renderers::#{@adapter.to_s.downcase.capitalize}Renderer")
+      renderer_klass.new(statements).render
     end
 
     def visit_statement(node)
@@ -67,8 +64,8 @@ module Aspen
 
     # TODO: When you pick up, get the labels back into here.
     #   Labelreg? typereg[:labels]?
-    # TODO: There's obviously some objects that want to be
-    #   created here, no?
+    # FIXME: This is doing too much.
+    # IDEA: Can't we have typed attributes come from the Grammar?
     def visit_customstatement(node)
       statement = visit(node.content)
       matcher   = discourse.grammar.matcher_for(statement)
@@ -107,19 +104,38 @@ module Aspen
 
       formatted_results = typed_results.inject({}) do |hash, elem|
         key, value = elem
-        formatted_value = if value.is_a?(Aspen::Node)
-          value.nickname_node
-        else
-          value
-        end
-        hash[key] = formatted_value
+        f_value = value.is_a?(Aspen::Node) ? value.nickname_node : value
+        hash[key] = f_value
+
+        # TODO: Trying to insert a p_id as well as p to be used in JSON identifiers.
+        # if value.is_a?(Aspen::Node)
+        #   hash["#{key}_id"] = value.nickname
+        # end
+        # puts "TYPED VALS: #{hash.inspect}"
         hash
       end
 
-      CustomStatement.new(
-        nodes: nodes,
-        cypher: Mustache.render(template.strip, formatted_results)
-      )
+      slugs = template.scan(/{{{?(?<full>uniq_(?<name>\w+))}}}?/).uniq
+      usable_results = if slugs.any?
+        counts = slugs.map do |full, short|
+          [full, "#{short}_#{@slug_counters[full]}"]
+        end.to_h
+
+        context = results.merge(counts)
+        custom_statement = CustomStatement.new(
+          nodes: nodes,
+          cypher: Mustache.render(template.strip, formatted_results.merge(counts))
+        )
+        slugs.each do |full, _|
+          @slug_counters[full] = @slug_counters[full] + 1
+        end
+        custom_statement
+      else
+        CustomStatement.new(
+          nodes: nodes,
+          cypher: Mustache.render(template.strip, formatted_results)
+        )
+      end
     end
 
     def visit_node(node)
@@ -140,7 +156,7 @@ module Aspen
     def visit_edge(node)
       content = visit(node.content)
       unless discourse.allows_edge?(content)
-        raise Aspen::CompileError, """
+        raise Aspen::Error, """
           Your narrative includes an edge called '#{content}',
           but only #{discourse.allowed_edges} are allowed.
         """
@@ -160,7 +176,7 @@ module Aspen
           but only #{discourse.allowed_labels} are allowed.
         """
       end
-      return label
+      label
     end
 
     def visit_attribute(node)

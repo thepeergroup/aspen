@@ -11,6 +11,7 @@ require 'aspen/errors'
 require 'aspen/lexer'
 require 'aspen/node'
 require 'aspen/parser'
+require 'aspen/renderers'
 require 'aspen/statement'
 require 'aspen/system_default'
 require 'aspen/version'
@@ -27,16 +28,20 @@ module Aspen
     Compiler.render(ast, environment)
   end
 
-  def self.compile_text(text)
+  def self.compile_text(text, environment = {})
     assert_text(text)
 
     if text.include?(SEPARATOR)
       env, _sep, code = text.partition(SEPARATOR)
-      compile_code(code, YAML.load(env))
+      compile_code(code, YAML.load(env).merge(environment))
     else
       code = text
-      compile_code(code, {})
+      compile_code(code, environment)
     end
+  end
+
+  def self.available_formats
+    [:cypher, :json, :gexf]
   end
 
   private

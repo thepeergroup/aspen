@@ -3,14 +3,16 @@ require 'strscan'
 module Aspen
   class Lexer
 
-    STRING_CAPTURE = /(["'])(?:(?=(\\?))\2.)*?\1/
+    STRING_CAPTURE    = /(["'])(?:(?=(\\?))\2.)*?\1/
     # From https://stackoverflow.com/questions/171480/regex-grabbing-values-between-quotation-marks
 
-    NUMBER_CAPTURE = /([\d,]+\.?\d+)/
+    NUMBER_CAPTURE    = /([\d,]+\.?\d+)/
 
     PASCAL_CASE       = /^([A-Z][a-zA-Z0-9]+)/
     LABEL_PASCAL_CASE = /^(:[A-Z][a-zA-Z0-9]+)/
-    GROUPED_FORM      = /^([A-Z][a-zA-Z0-9]+)[,:] ([[[:alnum:]][[:blank:]]\"\'\.]+)\)/
+
+    CONTENT_REGEX     = /[[[:alnum:]][[:blank:]]"'&_,\-\–\—\!\.\/\\\?\$]+/
+    LABELED_NODE      = /^([A-Z][a-zA-Z0-9]+): (#{CONTENT_REGEX})\)/
 
     def self.tokenize(code, env={})
       new.tokenize(code, env)
@@ -71,22 +73,22 @@ module Aspen
           end
 
         when :node then
-          # Removed Cypher form for now. Uncomment the next 3 lines
+          # Removed Cypher form for now. Un   comment the next 3 lines
           # to start working on it.
           #
           # if scanner.scan(LABEL_PASCAL_CASE)
           #   tokens << [:LABEL, scanner.matched]
           #   push_state :hash
-          if scanner.match?(GROUPED_FORM)
-            push_state :node_grouped_form
+          if scanner.match?(LABELED_NODE)
+            push_state :node_labeled
           elsif scanner.scan(/\n/) && stack == [:list, :node]
-            # If it's a list node and we encounter a newline,
-            # pop :node so we can move back to the list.
+            # If we're inside a list node and we encounter a newline,
+            # pop :node so we can return to the :list state.
             scanner.unscan
             pop_state
-          elsif scanner.scan(/[[[:alnum:]][[:blank:]]\"\'\.]+/)
+          elsif scanner.scan(CONTENT_REGEX)
             tokens << [:CONTENT, scanner.matched.strip]
-          elsif scanner.scan(/[\,\:]/)
+          elsif scanner.scan(/[\:]/)
             tokens << [:SEPARATOR, scanner.matched]
           elsif scanner.scan(/\(/)
             tokens << [:OPEN_PARENS]
@@ -98,7 +100,7 @@ module Aspen
             no_match(scanner, state)
           end
 
-        when :node_grouped_form
+        when :node_labeled
           if scanner.scan(PASCAL_CASE)
             tokens << [:LABEL, scanner.matched]
             pop_state # Back to Node

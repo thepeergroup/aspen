@@ -16,6 +16,26 @@ describe Aspen do
       File.read "spec/support/files/cypher/#{filename}.cql"
     end
 
+    context 'with symbols in nodes' do
+      it 'renders' do
+        expect(Aspen.compile_text("(User: George_Lucas44) [directed] (Film: THX-1138).")).to include("THX-1138")
+        expect(Aspen.compile_text("(Ke$ha) [changed name to] (Name: Kesha).")).to include("Ke$ha")
+      end
+    end
+
+    pending 'with nested parens / brackets' do
+      it 'renders' do
+        expect(Aspen.compile_text("(Matt (18F)) [works with] (Melissa (18F)).")).to include("18F")
+        expect(Aspen.compile_text("(Matt [18F]) [works with] (Melissa [18F]).")).to include("18F")
+      end
+    end
+
+    context 'with commas' do
+      it 'renders' do
+        expect(Aspen.compile_text("(Matt, creator of Aspen) [knows] (someone else).")).to include("Aspen")
+      end
+    end
+
     context 'without discourse' do
       let(:filename) { '1-simple' }
       it 'renders' do
@@ -109,14 +129,23 @@ describe Aspen do
       context 'variant 2' do
         let(:filename) { 'list-variant-2' }
         pending 'renders' do
+          fail "not yet implemented"
           expect(Aspen.compile_text(aspen)).to eql(cypher)
         end
       end
       context 'variant 3' do
         let(:filename) { 'list-variant-3' }
         pending 'renders' do
+          fail "not yet implemented"
           expect(Aspen.compile_text(aspen)).to eql(cypher)
         end
+      end
+    end
+
+    context 'unique nicknames' do
+      let(:filename) { 'unique-nicknames' }
+      it 'renders' do
+        expect(Aspen.compile_text(aspen)).to eql(cypher)
       end
     end
   end

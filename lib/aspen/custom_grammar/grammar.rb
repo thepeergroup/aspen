@@ -14,6 +14,7 @@ module Aspen
 
       def initialize()
         @registry = []
+        @slug_counters = Hash.new { 1 }
       end
 
       # Does the given text match a matcher?
@@ -48,10 +49,9 @@ module Aspen
 
       # This doesn't quite work, because var results is untyped.
       def render(content)
-        matcher  = matcher_for(content).value!
+        matcher  = matcher_for(content)
         results  = results_for(content)
         template = matcher.template
-        Mustache.render(template, results)
       end
 
       def results_for(text)

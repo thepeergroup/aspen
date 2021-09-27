@@ -17,11 +17,11 @@ describe Aspen::Lexer do
       end
 
       context "with grouped form" do
-        let(:code) { "(Person, Liz M. Lemon)" }
+        let(:code) { "(Person: Liz M. Lemon)" }
         let(:tokens) { [
           [:OPEN_PARENS],
           [:LABEL, "Person"],
-          [:SEPARATOR, ","],
+          [:SEPARATOR, ":"],
           [:CONTENT, "Liz M. Lemon"],
           [:CLOSE_PARENS]
         ] }
