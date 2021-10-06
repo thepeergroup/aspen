@@ -11,3 +11,6 @@
 /examples/
 
 .DS_Store
+
+# Ignore sample project
+myproject/
