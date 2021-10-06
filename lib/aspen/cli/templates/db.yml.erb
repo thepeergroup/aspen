@@ -1,0 +1,22 @@
+# WARNING!
+#    WARNING!
+#       WARNING!
+
+# This should NEVER point to a production database or any
+# database that you need the data to persist in.
+
+# This should only ever point to a Sandbox database that
+# you are comfortable completely deleting each time
+# you rebuild these Aspen files.
+
+<%
+require 'uri'
+
+begin
+  uri = URI.parse(database_url)
+rescue URI::InvalidURIError
+  raise "Invalid database URL"
+end
+%>
+
+url: <%= database_url %>

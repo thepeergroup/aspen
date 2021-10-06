@@ -1,6 +1,3 @@
-require 'neo4j/core'
-require 'neo4j/core/cypher_session/adaptors/http'
-
 module Aspen
   module Actions
     class Compile
@@ -26,31 +23,6 @@ module Aspen
         @cypher ||= Aspen.compile_text(File.read(@path))
         File.open(@dest, 'w') { |file| file << @cypher }
         puts "Compiled #{@basename}.aspen to #{@basename}.cql."
-      end
-
-      def send_to_database
-        db_drop if options.fetch(:drop)
-        db_push
-      end
-
-      def db
-        return @session if @session
-        url = options.fetch(:database)
-        puts "About to push to Neo4j at #{url}"
-        adaptor = Neo4j::Core::CypherSession::Adaptors::HTTP.new(url, {})
-        @session = Neo4j::Core::CypherSession.new(adaptor)
-      end
-
-      def db_drop
-        print "About to drop data from database..."
-        db.query("MATCH (n) DETACH DELETE n")
-        print "OK\n"
-      end
-
-      def db_push
-        print "About to push data to database..."
-        db.query(@cypher)
-        print "OK\n"
       end
 
     end

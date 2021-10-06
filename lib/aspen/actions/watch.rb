@@ -4,30 +4,22 @@ module Aspen
   module Actions
     class Watch
 
-      def initialize(path: , options: {})
-        @path     = path
-        @logger   = options.fetch(:logger)   { Logger.new(STDOUT, level: :warn) }
-        @database = options.fetch(:database) { false }
-        @drop     = options.fetch(:drop)     { false }
-
+      def initialize(options: {})
+        @options = options
+        @logger  = options.fetch(:logger) { Logger.new(STDOUT, level: :warn) }
         Listen.logger = @logger
       end
 
       def call
-        puts "Using debug level #{@logger.level}"
-        puts "Listening for changes at path: #{@path.inspect} ..."
-        puts "Publishing to database at #{@database}..." if @database
-        puts drop_mode_message if @drop
-        listener = Listen.to(@path, only: /\.aspen$/) do |mod, add, _rem|
-          begin
-            files_to_compile = [mod, add].flatten
-            files_to_compile.each do |path|
-              Aspen::CLI::Commands::Compile.new.call(path: path, database: @database, drop: @drop)
-            end
-          rescue Aspen::Error => e
-            puts e.message
-          end
+        puts warning_message if using_database?
+
+        listener = Listen.to('src/', only: /\.aspen$/) do |mod, add, _rem|
+          Aspen::CLI::Commands::Build.new.call
+          Aspen::Actions::Push.new.call
+        rescue Aspen::Error => e
+          puts e.message
         end
+
         listener.start
         sleep
       rescue Interrupt => e
@@ -40,18 +32,23 @@ module Aspen
 
       private
 
-      def drop_mode_message
-        <<~MSG
+        def using_database?
+          @options[:database]
+        end
 
-          ---- DANGER! DROP MODE!
+        def warning_message
+          <<~MSG
+            ⚠️ WARNING: `aspen watch` is experimental, and saving a file/rebuilding the data
+            will cause ALL OF THE DATA in the database to be DELETED and rewritten.
 
-            You enabled drop mode, which will delete all the contents of your database
-            before every compilation.
+            By proceeding, you acknowledge that the Neo4j database at TODO: host:port will
+            be dropped the next time a file in this project is saved.
 
-            If you want to stop this, press Ctrl+C and remove the --drop option,
-            or replace it with --no-drop.
-        MSG
-      end
+            Use Ctrl+C to quit.
+
+            Watching....
+          MSG
+        end
 
     end
   end

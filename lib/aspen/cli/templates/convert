@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+# This file is used to convert any non-Aspen resources,
+# such as CSV files or other data, into Aspen before
+# building the project.
+
+require 'aspen'
+require 'aspen/helpers'
+require 'aspen/conversion'
+
+include Aspen::Helpers
+include Aspen::Conversion
+
+# Aspen.convert.csv('src/a_spreadsheet.csv').to_aspen do |csv, aspen|
+#   TODO: Do conversion work here
+# end

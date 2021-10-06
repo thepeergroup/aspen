@@ -6,3 +6,4 @@ require 'listen'
 require 'aspen'
 
 require 'aspen/cli/commands'
+require 'aspen/actions'
