@@ -1,5 +1,6 @@
 require 'aspen/abstract_parser'
 require 'aspen/abstract_statement'
+require 'aspen/adapters'
 require 'aspen/ast'
 require 'aspen/compiler'
 require 'aspen/contracts'
@@ -17,6 +18,19 @@ require 'aspen/system_default'
 require 'aspen/version'
 
 module Aspen
+
+  @@available_formats = []
+
+  def self.available_formats
+    @@available_formats
+  end
+
+  def self.available_formats=(*args)
+    @@available_formats = Array(args).flatten
+  end
+
+  # Set the available formats for the compiler.
+  Aspen::Adapters::Registry.new
 
   # TODO: There wants to be a pre-compiler stage/object.
 
@@ -38,10 +52,6 @@ module Aspen
       code = text
       compile_code(code, environment)
     end
-  end
-
-  def self.available_formats
-    [:cypher, :json, :gexf]
   end
 
   private

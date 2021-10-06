@@ -50,6 +50,7 @@ module Aspen
         visit(statement)
       end.reject { |elem| elem == :comment }
 
+      # @todo Replace with Aspen::Adapters
       renderer_klass = Kernel.const_get("Aspen::Renderers::#{@adapter.to_s.downcase.capitalize}Renderer")
       renderer_klass.new(statements).render
     end
