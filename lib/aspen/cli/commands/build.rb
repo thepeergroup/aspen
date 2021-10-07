@@ -2,6 +2,7 @@ module Aspen
   module CLI
     module Commands
 
+      # TODO Refactor build into Build::Steps
       class Build < Dry::CLI::Command
         desc "Build Aspen project"
 
@@ -24,17 +25,23 @@ module Aspen
           # make into one main Aspen file.
           puts "----> Collecting main.aspen from src/ and src/grammars"
 
-          if f.exist?('src/grammars')
-            Dir['src/grammars/*.aspen']
-          end
-
           # Clear the build/ folder.
           Dir["build/*"].each { |file| f.delete(file) }
 
           @grammars = "" # Main grammars IO
           @aspens   = "" # Main Aspen IO
-          Dir['src/grammars/*.aspen'].map { |path| @grammars << File.read(path) }
-          Dir['src/*.aspen'].map { |path| File.read(path) }.each do |file|
+
+          manifest = YAML.load_file('manifest.yml') if f.exist?('manifest.yml')
+
+          Dir['src/grammars/*.aspen'].map do |path|
+            # Skip if there's an ignore: src: in the manifest, and if it matches the file path
+            next if manifest.dig("ignore", "grammars") && manifest.dig("ignore", "grammars").any? { |ignore_path| Regexp.new(ignore_path) =~ path }
+            @grammars << File.read(path)
+          end
+          Dir['src/*.aspen'].map do |path|
+            next if manifest.dig("ignore", "src") && manifest.dig("ignore", "src").any? { |ignore_path| Regexp.new(ignore_path) =~ path }
+            File.read(path)
+          end.compact.each do |file|
             if file.include?(SEPARATOR)
               env, _sep, code = file.partition(SEPARATOR)
               @grammars << env
@@ -52,8 +59,7 @@ module Aspen
 
           puts "----> Compiling main Aspen file (#{main_aspen.path})"
           # Compile the main Aspen file, according to manifest.yml
-          if f.exist?('manifest.yml')
-            manifest = YAML.load_file('manifest.yml')
+          if manifest
             manifest["output"].each do |format|
               adapter = Aspen::Adapters::Registry.get(format.downcase.to_sym)
               out_path = main_aspen.path.gsub(/\.aspen$/, '') + adapter.ext
@@ -63,6 +69,10 @@ module Aspen
               end
               puts "----> Compiled main #{adapter.name} file"
             end
+          else
+            # TODO: Add better documentation about this, and move this
+            # upward in Confident Ruby style.
+            raise ArgumentError, "Requires manifest.yml with outputs"
           end
         end
       end
