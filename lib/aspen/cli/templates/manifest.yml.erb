@@ -1,0 +1,31 @@
+project_name: <%= project_name %>
+
+# These list the output formats that `aspen build` will produce.
+# Remove lines to remove that file from the build.
+output:
+  - Cypher
+  - JSON
+  - GEXF
+
+# Uncomment to ignore files in src/ or src/grammars
+# ignore:
+#   src:
+#     - specific_aspen_or_csv_file
+#   grammars:
+#     - default
+
+# Attach a file from Airtable with the following format
+# attached:
+#   -
+#     name:   { Name of resource, displayed in prompt. Not connected to Airtable. }
+#     source: airtable
+#     app_id: { your app ID (API key) }
+#     table:  { Name of table in Airtable }
+#     columns:
+#       - Columns
+#       - To
+#       - Download
+
+# How long to wait before re-downloading files (in seconds)
+# If no cache_seconds is specified, it will re-download every time.
+# cache_seconds: 300

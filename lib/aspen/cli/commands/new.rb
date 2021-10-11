@@ -35,13 +35,12 @@ module Aspen
           f.touch "#{project_name}/.aspen"
           puts "    #{project_name}/.aspen                -> File indicating Aspen project "
 
-          f.touch "#{project_name}/manifest.yml"
+          File.open("#{project_name}/manifest.yml", 'w') do |file|
+            template = File.read "lib/aspen/cli/templates/manifest.yml.erb"
+            file << ERB.new(template).result_with_hash(project_name: project_name)
+          end
           puts "    #{project_name}/manifest.yml          -> Metadata about included files"
 
-          f.touch "#{project_name}/.env"
-          puts "    #{project_name}/.env                  -> Env vars"
-
-          # Replace with template
           f.touch "#{project_name}/config/db.yml"
           File.open("#{project_name}/config/db.yml", 'w') do |file|
             template = File.read "lib/aspen/cli/templates/db.yml.erb"
@@ -66,8 +65,9 @@ module Aspen
           f.touch "#{project_name}/build/.gitkeep"
           puts "    #{project_name}/build/                -> Compilation is output here"
 
+          f.cp "lib/aspen/cli/templates/.gitignore", "#{project_name}/.gitignore"
           f.touch "#{project_name}/.gitignore"
-          puts "    #{project_name}/.gitignore            -> Ignoring .aspen, .env, build/"
+          puts "    #{project_name}/.gitignore            -> Ignoring config files, build files"
 
           puts "\n✅ Generated new project '#{project_name}'\n\n\n"
         end

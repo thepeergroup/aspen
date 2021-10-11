@@ -36,10 +36,11 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "pry"
 
   spec.add_dependency "activesupport",  "~> 6.0"
-  spec.add_dependency "dry-cli",        "~> 0.5"
+  spec.add_dependency "airtable"
+  spec.add_dependency "dry-cli",           "0.6.0"
   spec.add_dependency "dry-container",  "~> 0.7"
   spec.add_dependency "dry-monads",     "~> 1.0"
-  spec.add_dependency "dry-validation", "~> 1.4"
+  spec.add_dependency "dry-validation",    "1.5.0"
   spec.add_dependency "dry-types",      "~> 1.0"
   spec.add_dependency "listen",         "~> 3.0"
   spec.add_dependency "mustache",       "~> 1.0"
