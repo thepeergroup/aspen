@@ -1,0 +1,13 @@
+services:
+
+  neo4j:
+    image: neo4j:3.2.6
+    volumes:
+      - ./db/data:/var/lib/neo4j/data
+      - ./db/logs:/var/lib/neo4j/logs
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      NEO4J_AUTH: neo4j/pass
+      NEO4J__dbms__security__procedures__unrestricted: apoc.*

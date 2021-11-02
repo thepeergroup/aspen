@@ -15,6 +15,13 @@ module Aspen
         option :database_url,
           desc: "Database to push Aspen data to",
           aliases: ["d"],
+          default: "http://neo4j:pass@localhost:7474/",
+          required: false
+
+        option :docker,
+          desc: "Generate a Docker Compose file for a Neo4j database",
+          type: :boolean,
+          default: true,
           required: false
 
         def call(project_name: , **options)
@@ -48,6 +55,13 @@ module Aspen
           end
           puts "    #{project_name}/config/db.yml         -> Database configuration"
 
+          if options[:docker]
+            f.cp "lib/aspen/cli/templates/docker-compose.yml", "#{project_name}/docker-compose.yml"
+            puts "    #{project_name}/docker-compose.yml    -> Docker Compose file for Neo4j"
+          else
+            puts "    Skipping Docker Compose file"
+          end
+
           f.mkdir "#{project_name}/src/"
           puts "    #{project_name}/src/                  -> Source files"
 
@@ -69,7 +83,10 @@ module Aspen
           f.touch "#{project_name}/.gitignore"
           puts "    #{project_name}/.gitignore            -> Ignoring config files, build files"
 
-          puts "\n✅ Generated new project '#{project_name}'\n\n\n"
+          if options[:docker]
+            puts "\nTo start the Neo4j database, run `docker-compose up` from the #{project_name} folder"
+          end
+          puts "\n✅ Generated new project '#{project_name}'\n\n"
         end
       end
 
