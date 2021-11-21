@@ -57,17 +57,6 @@ describe Aspen do
       end
     end
 
-    # pending 'with Cypher form' do
-    #   fail """
-    #     Not yet implemented, thinking about skipping tokenizing Cypher
-    #     as little as possible.
-    #   """
-    #   let(:filename) { '4-full-form' }
-    #   it 'renders' do
-    #     expect(Aspen.compile_text(aspen)).to eql(cypher)
-    #   end
-    # end
-
     context 'with implicitly typed attributes' do
       let(:filename) { '5-impl-typed-attrs' }
       it 'renders' do

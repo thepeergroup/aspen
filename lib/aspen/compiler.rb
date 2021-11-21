@@ -58,7 +58,7 @@ module Aspen
       Statement.new(
         origin: visit(node.origin),
         edge: visit(node.edge),
-        destination: visit(node.destination)
+        target: visit(node.target)
       )
     end
 

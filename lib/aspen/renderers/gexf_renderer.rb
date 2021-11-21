@@ -36,7 +36,7 @@ module Aspen
             next # NO OP
           else
             <<~GEXF
-              <edge id="#{id}" source="#{st.origin.nickname}" target="#{st.destination.nickname}" label="#{st.edge.label}">
+              <edge id="#{id}" source="#{st.origin.nickname}" target="#{st.target.nickname}" label="#{st.edge.label}">
             GEXF
           end
         end.compact
