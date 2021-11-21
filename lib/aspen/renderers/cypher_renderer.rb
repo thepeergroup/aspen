@@ -5,8 +5,8 @@ module Aspen
   module Renderers
     class CypherRenderer < AbstractRenderer
 
-      def render(batch: true)
-        if batch
+      def render
+        if environment[:batch].nil? || environment[:batch]
           CypherBatchRenderer.new(statements).render
         else
           CypherBaseRenderer.new(statements).render

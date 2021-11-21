@@ -11,6 +11,8 @@ module Aspen
       :custom
     end
 
+    # @todo The signature of the custom statement should be the
+    #   Cypher template for that statement.
     def signature
       "custom"
     end

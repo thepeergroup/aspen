@@ -16,6 +16,10 @@ describe Aspen do
       File.read "spec/support/files/cypher/#{filename}.cql"
     end
 
+    let (:env) do
+      { batch: false }
+    end
+
     context 'with symbols in nodes' do
       it 'renders' do
         expect(Aspen.compile_text("(User: George_Lucas44) [directed] (Film: THX-1138).")).to include("THX-1138")
@@ -36,107 +40,122 @@ describe Aspen do
       end
     end
 
-    context 'without discourse' do
-      let(:filename) { '1-simple' }
-      it 'renders' do
-        expect(Aspen.compile_text(aspen)).to eql(cypher)
-      end
-    end
 
-    context 'with discourse' do
-      let(:filename) { '2-two' }
-      it 'renders' do
-        expect(Aspen.compile_text(aspen)).to eql(cypher)
-      end
-    end
-
-    context 'with a discourse with :attributes, :reciprocal' do
-      let(:filename) { '3-slightly-complex' }
-      it 'renders' do
-        expect(Aspen.compile_text(aspen)).to eql(cypher)
-      end
-    end
-
-    context 'with implicitly typed attributes' do
-      let(:filename) { '5-impl-typed-attrs' }
-      it 'renders' do
-        expect(Aspen.compile_text(aspen)).to eql(cypher)
-      end
-    end
-
-    context 'with implicitly typed attributes, DA form' do
-      let(:filename) { '6-impl-typed-da' }
-      it 'renders' do
-        expect(Aspen.compile_text(aspen)).to eql(cypher)
-      end
-    end
-
-    context 'with a small network' do
-      let(:filename) { '7-small-network' }
-      it 'renders' do
-        expect(Aspen.compile_text(aspen)).to eql(cypher)
-      end
-    end
-
-    context 'with complex matchers' do
-      let(:filename) { '8-with-matchers' }
-      it 'renders' do
-        expect(Aspen.compile_text(aspen)).to eql(cypher)
-      end
-    end
-
-    context 'with protections' do
-      context 'and an invalid label' do
-        let(:filename) { 'protection-invalid-label' }
-        it 'raises' do
-          expect { Aspen.compile_text(aspen) }.to raise_error(Aspen::Error)
-        end
+    context 'with batching' do
+      let (:env) do
+        { batch: true }
       end
 
-      context 'and an invalid edge' do
-        let(:filename) { 'protection-invalid-edge' }
-        it 'raises' do
-          expect { Aspen.compile_text(aspen) }.to raise_error(Aspen::Error)
-        end
+      let (:cypher) do
+        File.read "spec/support/files/cypher/#{filename}-batch.cql"
       end
 
-      context 'and valid content' do
-        let(:filename) { 'protection-valid' }
+      context 'without discourse' do
+        let(:filename) { '1-simple' }
         it 'renders' do
-          expect(Aspen.compile_text(aspen)).to eql(cypher)
+          expect(Aspen.compile_text(aspen, env)).to eql(cypher)
         end
       end
-    end
+    end # / with batching
 
-    context 'lists' do
-      context 'variant 1' do
-        let(:filename) { 'list-variant-1' }
+
+    context 'without batching' do
+      context 'with discourse' do
+        let(:filename) { '2-two' }
         it 'renders' do
-          expect(Aspen.compile_text(aspen)).to eql(cypher)
+          expect(Aspen.compile_text(aspen, env)).to eql(cypher)
         end
       end
-      context 'variant 2' do
-        let(:filename) { 'list-variant-2' }
-        pending 'renders' do
-          fail "not yet implemented"
-          expect(Aspen.compile_text(aspen)).to eql(cypher)
-        end
-      end
-      context 'variant 3' do
-        let(:filename) { 'list-variant-3' }
-        pending 'renders' do
-          fail "not yet implemented"
-          expect(Aspen.compile_text(aspen)).to eql(cypher)
-        end
-      end
-    end
 
-    context 'unique nicknames' do
-      let(:filename) { 'unique-nicknames' }
-      it 'renders' do
-        expect(Aspen.compile_text(aspen)).to eql(cypher)
+      context 'with a discourse with :attributes, :reciprocal' do
+        let(:filename) { '3-slightly-complex' }
+        it 'renders' do
+          expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+        end
       end
-    end
+
+      context 'with implicitly typed attributes' do
+        let(:filename) { '5-impl-typed-attrs' }
+        it 'renders' do
+          expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+        end
+      end
+
+      context 'with implicitly typed attributes, DA form' do
+        let(:filename) { '6-impl-typed-da' }
+        it 'renders' do
+          expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+        end
+      end
+
+      context 'with a small network' do
+        let(:filename) { '7-small-network' }
+        it 'renders' do
+          expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+        end
+      end
+
+      context 'with complex matchers' do
+        let(:filename) { '8-with-matchers' }
+        it 'renders' do
+          expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+        end
+      end
+
+      context 'with protections' do
+        context 'and an invalid label' do
+          let(:filename) { 'protection-invalid-label' }
+          it 'raises' do
+            expect { Aspen.compile_text(aspen, env) }.to raise_error(Aspen::Error)
+          end
+        end
+
+        context 'and an invalid edge' do
+          let(:filename) { 'protection-invalid-edge' }
+          it 'raises' do
+            expect { Aspen.compile_text(aspen, env) }.to raise_error(Aspen::Error)
+          end
+        end
+
+        context 'and valid content' do
+          let(:filename) { 'protection-valid' }
+          it 'renders' do
+            expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+          end
+        end
+      end
+
+      context 'lists' do
+        context 'variant 1' do
+          let(:filename) { 'list-variant-1' }
+          it 'renders' do
+            expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+          end
+        end
+        context 'variant 2' do
+          let(:filename) { 'list-variant-2' }
+          pending 'renders' do
+            fail "not yet implemented"
+            expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+          end
+        end
+        context 'variant 3' do
+          let(:filename) { 'list-variant-3' }
+          pending 'renders' do
+            fail "not yet implemented"
+            expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+          end
+        end
+      end
+
+      context 'unique nicknames' do
+        let(:filename) { 'unique-nicknames' }
+        it 'renders' do
+          expect(Aspen.compile_text(aspen, env)).to eql(cypher)
+        end
+      end
+
+    end # / without batching
   end
 
   # pending "minimal Aspen (just a node) compiles" do
@@ -154,7 +173,7 @@ describe Aspen do
   #     MERGE (person_matt)-[:INTERVIEWED_BY]->(person_mia)
   #   CYPHER
 
-  #   expect(Aspen.compile_text(aspen)).to eql(cypher)
+  #   expect(Aspen.compile_text(aspen, env)).to eql(cypher)
   # end
 
   # TODO: In file 8, catch that Jack and Jack Donaghy are collisions
