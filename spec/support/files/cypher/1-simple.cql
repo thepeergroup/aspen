@@ -1,5 +1,9 @@
-MERGE (entity_liz:Entity { name: "Liz" })
-MERGE (entity_jack:Entity { name: "Jack" })
+(Entity)-[KNOWS]->(Entity)
+{batch: [
+  {from:"Liz",to:"Jack"},
+]}
 
-MERGE (entity_liz)-[:KNOWS]->(entity_jack)
-;
+UNWIND $batch as row
+MATCH (from:Entity {name: row.from})
+MATCH (to:Entity {name: row.to})
+MERGE (from)-[:KNOWS]->(to)

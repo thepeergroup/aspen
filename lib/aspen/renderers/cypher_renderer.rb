@@ -5,7 +5,7 @@ module Aspen
   module Renderers
     class CypherRenderer < AbstractRenderer
 
-      def render(batch: false)
+      def render(batch: true)
         if batch
           CypherBatchRenderer.new(statements).render
         else
