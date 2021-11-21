@@ -3,15 +3,13 @@ module Aspen
     module Nodes
       class Statement
 
-        attr_reader :origin, :edge, :destination
+        attr_reader :origin, :edge, :target
 
-        def initialize(origin: nil, edge: nil, dest: nil)
-          @origin      = origin
-          @edge        = edge
-          @destination = dest
+        def initialize(origin: nil, edge: nil, target: nil)
+          @origin = origin
+          @edge   = edge
+          @target = target
         end
-
-        alias_method :target, :destination
 
       end
     end

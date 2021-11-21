@@ -1,9 +1,10 @@
 class AbstractRenderer
 
-  attr_reader :statements
+  attr_reader :statements, :environment
 
-  def initialize(statements)
+  def initialize(statements, environment = {})
     @statements = statements
+    @environment = environment
   end
 
   def render

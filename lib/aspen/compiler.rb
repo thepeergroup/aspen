@@ -6,17 +6,25 @@ module Aspen
 
     attr_reader :root, :environment
 
+    # @param environment [Hash]
+    # @todo Make {environment} an Aspen::Environment
     def self.render(root, environment = {})
       new(root, environment).render
     end
 
+    # @param environment [Hash]
+    # @todo Make {environment} an Aspen::Environment
     def initialize(root, environment = {})
       @root = root
       @environment = environment
       @adapter = environment.fetch(:adapter, :cypher).to_sym
-      # FIXME: This is too much responsibility for the compiler.
+      # @todo FIXME: This is too much responsibility for the compiler.
+      #   This should be delegated to an object and the later calls
+      #   just messages to that object.
       @slug_counters = Hash.new { 1 }
 
+      # @todo Move this into an Environment object—it should be set there.
+      #   and here, just run environment.validate
       unless Aspen.available_formats.include?(@adapter)
         raise Aspen::ArgumentError, <<~MSG
           The adapter, also known as the output format, must be one of:
@@ -32,7 +40,7 @@ module Aspen
     end
 
     def discourse
-      @discourse ||= Discourse.from_hash(@environment)
+      @discourse ||= Discourse.from_hash(environment)
     end
 
     def visit(node)
@@ -50,23 +58,21 @@ module Aspen
         visit(statement)
       end.reject { |elem| elem == :comment }
 
-      # @todo Replace with Aspen::Adapters
       renderer_klass = Kernel.const_get("Aspen::Renderers::#{@adapter.to_s.downcase.capitalize}Renderer")
-      renderer_klass.new(statements).render
+      renderer_klass.new(statements, environment).render
     end
 
     def visit_statement(node)
       Statement.new(
         origin: visit(node.origin),
         edge: visit(node.edge),
-        destination: visit(node.destination)
+        target: visit(node.target)
       )
     end
 
-    # TODO: When you pick up, get the labels back into here.
-    #   Labelreg? typereg[:labels]?
-    # FIXME: This is doing too much.
-    # IDEA: Can't we have typed attributes come from the Grammar?
+    # @todo Get the labels back into here. Labelreg? typereg[:labels]?
+    #   This is doing too much.
+    #   Can't we have typed attributes come from the Grammar?
     def visit_customstatement(node)
       statement = visit(node.content)
       matcher   = discourse.grammar.matcher_for(statement)
@@ -194,8 +200,9 @@ module Aspen
       node.content
     end
 
+    # @returns [Symbol] :comment
+    # This acts as a signal so other methods know to reject comments.
     def visit_comment(node)
-      # Signal to other methods to reject comments.
       :comment
     end
   end

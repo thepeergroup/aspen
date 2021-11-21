@@ -75,7 +75,7 @@ module Aspen
           # puts "TARGET #{target.attribute.content.inner_content} had label #{target.label.content.inner_content.inspect}"
           target.label = label if target.label.content.inner_content.nil?
           # puts "TARGET #{target.attribute.content.inner_content} has label #{target.label.content.inner_content.inspect}"
-          Aspen::AST::Nodes::Statement.new(origin: origin, edge: edge, dest: target)
+          Aspen::AST::Nodes::Statement.new(origin: origin, edge: edge, target: target)
         end
       end
     end
@@ -124,12 +124,12 @@ module Aspen
       # TODO: Might benefit from a condition when doing non-vanilla statements?
       origin = parse_node
       edge   = parse_edge
-      dest   = parse_node
+      target = parse_node
 
       # SMELL: Nil check
       advance if peek && peek.first == :END_STATEMENT
 
-      Aspen::AST::Nodes::Statement.new(origin: origin, edge: edge, dest: dest)
+      Aspen::AST::Nodes::Statement.new(origin: origin, edge: edge, target: target)
     end
 
     def parse_node

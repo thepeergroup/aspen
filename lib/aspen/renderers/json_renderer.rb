@@ -27,7 +27,7 @@ module Aspen
             {
               id: "e#{id}",
               source: st.origin.nickname,
-              target: st.destination.nickname,
+              target: st.target.nickname,
               label: st.edge.label,
               reciprocal: st.edge.reciprocal?
             }
