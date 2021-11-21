@@ -31,6 +31,10 @@ module Aspen
       "(#{nickname})"
     end
 
+    def signature
+      "(#{label})"
+    end
+
     def attribute_string
       attributes.to_s.
         gsub(/"(?<token>[[:alpha:]_]+)"=>/, '\k<token>: ').

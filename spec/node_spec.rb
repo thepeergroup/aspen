@@ -9,4 +9,14 @@ describe Aspen::Node do
 
 =end
 
+  context "with a valid node" do
+    let(:subject) {
+      Aspen::Node.new(label: "Person", attributes: { name: "Liz" })
+    }
+
+    it "has a signature" do
+      expect(subject.signature).to eq("(Person)")
+    end
+  end
+
 end
