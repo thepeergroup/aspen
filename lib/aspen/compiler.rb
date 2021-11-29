@@ -169,8 +169,8 @@ module Aspen
         """
       end
       Aspen::Edge.new(
-        word: content,
-        reciprocal: discourse.reciprocal?(visit(node.content))
+        content,
+        mutual: discourse.mutual?(visit(node.content))
       )
     end
 

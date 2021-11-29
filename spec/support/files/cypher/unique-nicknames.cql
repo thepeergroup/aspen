@@ -8,4 +8,3 @@ MERGE (person_matt)-[:KNOWS]-(person_alyssa)
 MERGE (person_alyssa)<-[:INCLUDES]-(intro_2:Introduction)-[:INCLUDES]->(person_joel)
 MERGE (intro_2)-[:OCCURRED_AT]->(:Event { title: "Graphs4Good Kickoff" })
 MERGE (person_alyssa)-[:KNOWS]-(person_joel)
-;

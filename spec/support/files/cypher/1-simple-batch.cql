@@ -1,10 +1,11 @@
-# (Entity)-[KNOWS]->(Entity)
+// (Entity)-[KNOWS]->(Entity)
 
-{batch: [
-  {from:"Liz",to:"Jack"},
-]}
+WITH [
+  {from: "Liz", to: "Jack"},
+  {from: "Tracy", to: "Kenneth"}
+] as values
 
-UNWIND $batch as row
-MATCH (from:Entity {name: row.from})
-MATCH (to:Entity {name: row.to})
+UNWIND values as row
+MERGE (from:Entity {name: row.from})
+MERGE (to:Entity {name: row.to})
 MERGE (from)-[:KNOWS]->(to)

@@ -13,15 +13,15 @@ describe Aspen::Compiler do
     it 'renders Cypher' do
       expect(result).to eq(
       <<~CYPHER
-        # (Entity)-[KNOWS]-(Entity)
+        // (Entity)-[KNOWS]-(Entity)
 
-        {batch: [
-          {from:"Liz",to:"Jack"},
-        ]}
+        WITH [
+          {from: "Liz", to: "Jack"}
+        ] as values
 
-        UNWIND $batch as row
-        MATCH (from:Entity {name: row.from})
-        MATCH (to:Entity {name: row.to})
+        UNWIND values as row
+        MERGE (from:Entity {name: row.from})
+        MERGE (to:Entity {name: row.to})
         MERGE (from)-[:KNOWS]-(to)
       CYPHER
       )

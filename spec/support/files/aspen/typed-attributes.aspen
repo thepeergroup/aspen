@@ -1,0 +1,9 @@
+default:
+  label: PostOffice
+  attribute: zipcode (string)
+  attributes:
+    Shipment: tracking_number (string)
+----
+
+(02111) [sent] (Shipment: 4aec5d)
+(05443) [received] (Shipment: 001091)

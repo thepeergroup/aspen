@@ -2,13 +2,13 @@ module Aspen
   class Edge
 
     # @todo Rename :word to :label
-    def initialize(word: , reciprocal: false)
-      @word = word
-      @reciprocal = reciprocal
+    def initialize(name, mutual: false)
+      @name = name
+      @mutual = mutual
     end
 
     def label
-      @word
+      @name
     end
 
     def to_cypher
@@ -19,14 +19,16 @@ module Aspen
       to_cypher.gsub(/:/, '')
     end
 
-    def reciprocal?
-      @reciprocal
+    def mutual?
+      @mutual
     end
+
+    alias_method :reciprocal?, :mutual?
 
     private
 
     def cap
-      @reciprocal ? "" : ">"
+      @mutual ? "" : ">"
     end
   end
 

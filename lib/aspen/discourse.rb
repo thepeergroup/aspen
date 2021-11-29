@@ -69,14 +69,17 @@ module Aspen
       allowed_edges.empty? || allowed_edges.include?(edge)
     end
 
-    def reciprocal
-      maybe_list = Maybe(@data.dig(:reciprocal))
+    def mutual
+      maybe_list = Maybe(@data.dig(:mutual) || @data.dig(:reciprocal))
       maybe_list.value_or(Array.new)
     end
 
-    def reciprocal?(edge_name)
-      reciprocal.include? edge_name
+    def mutual?(edge_name)
+      mutual.include? edge_name
     end
+
+    alias_method :reciprocal,  :mutual
+    alias_method :reciprocal?, :mutual?
 
     def add_grammar(grammar)
       @grammar = grammar

@@ -5,7 +5,7 @@ describe Aspen::Statement do
   context "with a valid statement" do
     let(:subject) {
       Aspen::Statement.new(
-        edge:   Aspen::Edge.new(word: "hired"),
+        edge:   Aspen::Edge.new("hired"),
         origin: Aspen::Node.new(label: "Company", attributes: { name: "Kabletown" }),
         target: Aspen::Node.new(label: "Person", attributes: { name: "Jack" }),
       )
@@ -20,10 +20,10 @@ describe Aspen::Statement do
     end
   end
 
-  context "with a reciprocal relationship" do
+  context "with a mutual relationship" do
     let(:subject) {
       Aspen::Statement.new(
-        edge:   Aspen::Edge.new(word: "knows", reciprocal: true),
+        edge:   Aspen::Edge.new("knows", mutual: true),
         origin: Aspen::Node.new(label: "Person", attributes: { name: "Liz" }),
         target: Aspen::Node.new(label: "Person", attributes: { name: "Jack" }),
       )

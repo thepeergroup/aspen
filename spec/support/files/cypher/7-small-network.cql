@@ -20,4 +20,3 @@ MERGE (person_rebecca)-[:KNOWS]-(person_jenna)
 MERGE (person_rebecca)-[:IS_FRIENDS_WITH]-(person_matt)
 MERGE (person_rebecca)-[:IS_FRIENDS_WITH]-(person_brianna)
 MERGE (person_rebecca)-[:KNOWS]-(person_eliza)
-;

@@ -118,18 +118,29 @@ module Aspen
             # Clear the build/ folder
             Dir["build/main-*"].each { |path| @files.delete(path)}
 
-            @grammars = "" # Main grammars IO
-            @aspens   = "" # Main Aspen IO
+            @grammars   = "" # Main grammars IO
+            @discourses = "" # Main discourses IO
+            @aspens     = "" # Main Aspen IO
 
+            collect_discourses
             collect_grammars
             collect_aspen
 
             main_aspen = File.open("build/main-#{Time.now.to_i}.aspen", 'w') do |file|
+              file << @discourses
               file << @grammars
               file << Aspen::SEPARATOR + "\n"
               file << @aspens
             end
             return main_aspen
+          end
+
+          def collect_discourses
+            Dir['src/discourses/*.aspen'].map do |path|
+              # Skip if there's an ignore: src: in the manifest, and if it matches the file path
+              next if manifest.dig("ignore", "discourses") && manifest.dig("ignore", "discourses").any? { |ignore_path| Regexp.new(ignore_path) =~ path }
+              @discourses << File.read(path)
+            end
           end
 
           def collect_grammars
@@ -149,7 +160,7 @@ module Aspen
             end.compact.each do |file|
               if file.include?(SEPARATOR)
                 env, _sep, code = file.partition(SEPARATOR)
-                @grammars << env
+                @discourses << env
                 @aspens << code
               else
                 @aspens << file
@@ -161,7 +172,7 @@ module Aspen
 
         class CompileMainAspen < BuildStep
 
-          def call(main_aspen_file)
+          def call(main_aspen_file, options)
             super
             puts "----> Compiling main Aspen file (#{main_aspen_file.path})"
             # Compile the main Aspen file, according to manifest.yml
@@ -176,7 +187,11 @@ module Aspen
               out_path = main_aspen_file.path.gsub(/\.aspen$/, '') + adapter.ext
 
               File.open(out_path, 'w') do |file|
-                file << Aspen.compile_text(File.read(main_aspen_file), adapter: adapter.id)
+                file << Aspen.compile_text(
+                  File.read(main_aspen_file),
+                  adapter: adapter.id,
+                  batch: options[:batch]
+                )
               end
               puts "----> Compiled main #{adapter.name} file"
             end

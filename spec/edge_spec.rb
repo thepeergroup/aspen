@@ -11,7 +11,7 @@ describe Aspen::Edge do
 
   context "with a valid edge" do
     let(:subject) {
-      Aspen::Edge.new(word: "threw a dodgeball at")
+      Aspen::Edge.new("threw a dodgeball at")
     }
 
     it 'renders cypher' do
@@ -22,9 +22,9 @@ describe Aspen::Edge do
       expect(subject.signature).to eq("-[THREW_A_DODGEBALL_AT]->")
     end
 
-    context "with a reciprocal relationship" do
+    context "with a mutual relationship" do
       let(:subject) {
-        Aspen::Edge.new(word: "knows", reciprocal: true)
+        Aspen::Edge.new("knows", mutual: true)
       }
 
       it "renders cypher" do

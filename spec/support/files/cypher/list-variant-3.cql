@@ -6,4 +6,3 @@ MERGE (state_maine:State { name: "Maine" })
 MERGE (entity_karl)-[:KNOWS_ABOUT]->(state_rhode_island)
 MERGE (entity_karl)-[:KNOWS_ABOUT]->(commonwealth_massachusetts)
 MERGE (entity_karl)-[:KNOWS_ABOUT]->(state_maine)
-;

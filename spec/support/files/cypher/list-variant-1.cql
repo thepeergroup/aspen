@@ -10,4 +10,3 @@ MERGE (entity_karl)-[:KNOWS_ABOUT]->(state_rhode_island)
 MERGE (entity_karl)-[:KNOWS_ABOUT]->(state_massachusetts)
 MERGE (entity_karl)-[:KNOWS_ABOUT]->(state_maine)
 MERGE (entity_karl)-[:HAS_JOB]->(job_consultant)
-;

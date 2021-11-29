@@ -8,14 +8,16 @@ module Aspen
       class Build < Dry::CLI::Command
         desc "Build Aspen project"
 
+        option :batch, type: :boolean, desc: "Batching", default: true
+
         include BuildSteps
 
-        def call(*)
+        def call(**options)
           CheckAspenProject.new.call
           DownloadAttachedResources.new.call
           ConvertIntoAspen.new.call
           main_aspen_file = CollectMainAspen.new.call
-          CompileMainAspen.new.call(main_aspen_file)
+          CompileMainAspen.new.call(main_aspen_file, options)
         end
       end
 

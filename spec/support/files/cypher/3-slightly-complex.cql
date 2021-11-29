@@ -18,4 +18,3 @@ MERGE (person_pete)-[:REPORTS_TO]->(person_liz)
 MERGE (person_pete)-[:PLAYED_GUITAR_FOR]->(person_jack)
 MERGE (person_hank)-[:RUNS]->(employer_kabletown)
 MERGE (person_liz)-[:WORKS_AT]->(employer_kabletown)
-;

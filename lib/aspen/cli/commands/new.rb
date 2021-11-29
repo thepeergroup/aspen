@@ -72,8 +72,13 @@ module Aspen
           FileUtils.chmod("+x", "#{project_name}/bin/convert")
           puts "    #{project_name}/bin/convert           -> Converts non-Aspen to Aspen"
 
+          f.mkdir "#{project_name}/src/discourses/"
+          f.touch "#{project_name}/src/discourses/.gitkeep"
+          puts "    #{project_name}/src/discourses/       -> Collection of Discourses"
+
           f.mkdir "#{project_name}/src/grammars/"
-          puts "    #{project_name}/src/grammars/         -> Aspen Grammar collection"
+          f.touch "#{project_name}/src/grammars/.gitkeep"
+          puts "    #{project_name}/src/grammars/         -> Collection of Grammars"
 
           f.mkdir "#{project_name}/build/"
           f.touch "#{project_name}/build/.gitkeep"
