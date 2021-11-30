@@ -33,10 +33,10 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "rspec", "~> 3.2"
-  spec.add_development_dependency "pry"
+  spec.add_development_dependency "pry",   "~> 0.12"
 
   spec.add_dependency "activesupport",  "~> 6.0"
-  spec.add_dependency "airtable"
+  spec.add_dependency "airtable",       "~> 0.0"
   spec.add_dependency "dry-cli",           "0.6.0"
   spec.add_dependency "dry-container",  "~> 0.7"
   spec.add_dependency "dry-monads",     "~> 1.0"
@@ -44,5 +44,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "dry-types",      "~> 1.0"
   spec.add_dependency "listen",         "~> 3.0"
   spec.add_dependency "mustache",       "~> 1.0"
-  spec.add_dependency "neo4j-core"
+  spec.add_dependency "neo4j-core",        "9.0.0"
 end

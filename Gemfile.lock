@@ -17,7 +17,7 @@ PATH
   specs:
     aspen (0.1.0)
       activesupport (~> 6.0)
-      airtable
+      airtable (~> 0.0)
       dry-cli (= 0.6.0)
       dry-container (~> 0.7)
       dry-monads (~> 1.0)
@@ -25,7 +25,7 @@ PATH
       dry-validation (= 1.5.0)
       listen (~> 3.0)
       mustache (~> 1.0)
-      neo4j-core
+      neo4j-core (= 9.0.0)
 
 GEM
   remote: https://rubygems.org/
@@ -167,7 +167,7 @@ PLATFORMS
 DEPENDENCIES
   aspen!
   dry-schema!
-  pry
+  pry (~> 0.12)
   rake (~> 12.0)
   rspec (~> 3.2)
 
