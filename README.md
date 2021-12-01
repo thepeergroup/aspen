@@ -34,17 +34,7 @@ MERGE (:Person { name: "Liz" })-[:KNOWS]->(:Person { name: "Jack" })
 
 ### Installation
 
-In your Gemfile:
-
-```ruby
-gem 'aspen'
-```
-
-By itself:
-
-```sh
-gem install aspen
-```
+Clone this repository, `cd` into it, and use the `bin/aspen` command. (Working on Rubygems publishing and a simple `bundle install` process soon.)
 
 
 ### Documentation
