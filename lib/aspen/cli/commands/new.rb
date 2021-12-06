@@ -43,20 +43,20 @@ module Aspen
           puts "    #{project_name}/.aspen                -> File indicating Aspen project "
 
           File.open("#{project_name}/manifest.yml", 'w') do |file|
-            template = File.read "lib/aspen/cli/templates/manifest.yml.erb"
+            template = get_template_file('manifest.yml.erb')
             file << ERB.new(template).result_with_hash(project_name: project_name)
           end
           puts "    #{project_name}/manifest.yml          -> Metadata about included files"
 
           f.touch "#{project_name}/config/db.yml"
           File.open("#{project_name}/config/db.yml", 'w') do |file|
-            template = File.read "lib/aspen/cli/templates/db.yml.erb"
+            template = get_template_file('db.yml.erb')
             file << ERB.new(template).result_with_hash(database_url: options[:database_url])
           end
           puts "    #{project_name}/config/db.yml         -> Database configuration"
 
           if options[:docker]
-            f.cp "lib/aspen/cli/templates/docker-compose.yml", "#{project_name}/docker-compose.yml"
+            f.cp get_template_path("docker-compose.yml"), "#{project_name}/docker-compose.yml"
             puts "    #{project_name}/docker-compose.yml    -> Docker Compose file for Neo4j"
           else
             puts "    Skipping Docker Compose file"
@@ -68,7 +68,7 @@ module Aspen
           f.mkdir "#{project_name}/bin/"
           puts "    #{project_name}/bin/                  -> Binary files (scripts)"
 
-          f.cp "lib/aspen/cli/templates/convert", "#{project_name}/bin/convert"
+          f.cp get_template_path("convert"), "#{project_name}/bin/convert"
           FileUtils.chmod("+x", "#{project_name}/bin/convert")
           puts "    #{project_name}/bin/convert           -> Converts non-Aspen to Aspen"
 
@@ -84,7 +84,7 @@ module Aspen
           f.touch "#{project_name}/build/.gitkeep"
           puts "    #{project_name}/build/                -> Compilation is output here"
 
-          f.cp "lib/aspen/cli/templates/.gitignore", "#{project_name}/.gitignore"
+          f.cp get_template_path(".gitignore"), "#{project_name}/.gitignore"
           f.touch "#{project_name}/.gitignore"
           puts "    #{project_name}/.gitignore            -> Ignoring config files, build files"
 
@@ -92,6 +92,20 @@ module Aspen
             puts "\nTo start the Neo4j database, run `docker-compose up` from the #{project_name} folder"
           end
           puts "\n✅ Generated new project '#{project_name}'\n\n"
+        end
+
+        def get_template_file(name)
+          File.read(
+            get_template_path(name)
+          )
+        end
+
+        def get_template_path(name)
+          File.expand_path(
+            File.join(
+              File.dirname(__FILE__), "..", "templates", name
+            )
+          )
         end
       end
 

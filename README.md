@@ -34,8 +34,15 @@ MERGE (:Person { name: "Liz" })-[:KNOWS]->(:Person { name: "Jack" })
 
 ### Installation
 
-Clone this repository, `cd` into it, and use the `bin/aspen` command. (Working on Rubygems publishing and a simple `bundle install` process soon.)
+```
+$ gem install aspen-cli
+```
 
+Start a new project:
+
+```
+$ aspen new your_project_name_here
+```
 
 ### Documentation
 
@@ -44,15 +51,17 @@ Clone this repository, `cd` into it, and use the `bin/aspen` command. (Working o
 [Full documentation in the Wiki](https://github.com/thepeergroup/aspen/wiki)
 
 
-### Why Aspen?
+### Why use Aspen?
 
-You need to compile semi-structured narratives into graph data, maybe connecting that data to other graph or tabular data.
+You need to turn notes and narratives into a network diagram or graph data.
+
+You may also want to connect that data to other data, maybe graph data, maybe tabular data.
 
 For what you want:
 
 - Spreadsheets are too rigid,
-- Machine learning / Natural Language Processing is too out of reach, and
-- You're ok with command-line tools for now (we hope to offer a GUI soon)
+- Machine learning and Natural Language Processing (NLP) are out of reach, and
+- You're ok using command-line tools for now (we hope to offer a GUI soon)
 
 
 ## Code of Conduct

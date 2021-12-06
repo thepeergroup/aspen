@@ -15,7 +15,7 @@ GIT
 PATH
   remote: .
   specs:
-    aspen (0.1.0)
+    aspen-cli (0.1.0)
       activesupport (~> 6.0)
       airtable (~> 0.0)
       dry-cli (= 0.6.0)
@@ -165,7 +165,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  aspen!
+  aspen-cli!
   dry-schema!
   pry (~> 0.12)
   rake (~> 12.0)
